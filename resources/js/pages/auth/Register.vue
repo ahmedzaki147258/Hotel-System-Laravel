@@ -15,15 +15,19 @@ const form = useForm({
     password: '',
     password_confirmation: '',
     gender: 'Male',
-    country: '',
+    country_id: null,
     mobile: '',
     avatar_image: null,
 });
+interface Country {
+  id: number;
+  name: string;
+  iso_alpha_2: string;
+}
 
-const countries = [
-    'Egypt', 'Saudi Arabia', 'United Arab Emirates',
-    'Kuwait', 'Qatar', 'Oman', 'Jordan'
-];
+const props = defineProps<{
+  countries: Country[];
+}>();
 
 const submit = () => {
     form.post(route('register'), {
@@ -94,17 +98,21 @@ const submit = () => {
 
                 <div class="grid gap-2">
                     <Label for="country">Country</Label>
-                    <Select v-model="form.country" required>
+                    <Select v-model="form.country_id" required>
                         <SelectTrigger class="w-full">
                             <SelectValue placeholder="Select country" />
                         </SelectTrigger>
                         <SelectContent class="w-full">
-                            <SelectItem v-for="country in countries" :key="country" :value="country">
-                                {{ country }}
+                            <SelectItem
+                                v-for="country in countries"
+                                :key="country.id"
+                                :value="country.id"
+                            >
+                                {{ country.name }} ({{ country.iso_alpha_2 }})
                             </SelectItem>
                         </SelectContent>
                     </Select>
-                    <InputError :message="form.errors.country" />
+                    <InputError :message="form.errors.country_id" />
                 </div>
 
                 <div class="grid gap-2">

@@ -15,10 +15,10 @@ class Client extends Authenticatable
         'email',
         'password',
         'avatar_image',
-        'country',
+        'country_id',
         'gender',
         'mobile',
-        'last_login',
+        'last_login_at',
         'approved_by',
         'approved_at',
         'reset_token',
@@ -31,5 +31,9 @@ class Client extends Authenticatable
 
     public function approvedBy(): BelongsTo {
         return $this->belongsTo(User::class, 'approved_by', 'id');
+    }
+
+    public function country(): BelongsTo {
+        return $this->belongsTo(\Lwwcas\LaravelCountries\Models\Country::class);
     }
 }

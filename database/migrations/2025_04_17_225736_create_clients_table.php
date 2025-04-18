@@ -17,10 +17,11 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->string('avatar_image');
-            $table->string('country');
+            $table->unsignedInteger('country_id');
+            $table->foreign('country_id')->references('id')->on('lc_countries')->onDelete('restrict');
             $table->enum('gender', ['Male', 'Female']);
             $table->string('mobile');
-            $table->timestamp('last_login')->nullable();
+            $table->timestamp('last_login_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('restrict');
             $table->timestamp('approved_at')->nullable();
             $table->string('reset_token')->nullable();
