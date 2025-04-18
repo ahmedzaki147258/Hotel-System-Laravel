@@ -5,7 +5,7 @@
     <title>We Miss You!</title>
 </head>
 <body>
-    <h1>Hello {{ $client->name }}</h1>
+    <h1>Hello, {{ $client->name }}</h1>
     <p>We noticed you haven't logged in for a while.</p>
     <p>We miss having you around!</p>
     <p>

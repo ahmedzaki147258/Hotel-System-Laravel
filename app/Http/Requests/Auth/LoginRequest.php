@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\Client;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +31,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'userType' => ['required', 'in:administration,client'],
         ];
     }
 
@@ -41,7 +44,26 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $credentials = $this->only('email', 'password');
+        $remember = $this->boolean('remember');
+        $guard = $this->userType === 'client' ? 'client' : 'web';
+        if ($this->userType === 'client') {
+            $user = Client::where('email', $this->email)->first();
+            if (!$user) {
+                throw ValidationException::withMessages([
+                    'email' => trans('account deleted'),
+                ]);
+            }
+            if (!$user->approved_by || !$user->approved_at) {
+                throw ValidationException::withMessages([
+                    'email' => trans('account inactive'),
+                ]);
+            }
+        } else {
+            $user = User::where('email', $this->email)->first();
+        }
+
+        if (! Auth::guard($guard)->attempt($credentials, $remember)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -50,6 +72,10 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        $token = $user->createToken('auth_token', [$this->userType])->plainTextToken;
+        session(['sanctum_token' => $token]);
+        $this->merge(['sanctum_token' => $token]);
     }
 
     /**

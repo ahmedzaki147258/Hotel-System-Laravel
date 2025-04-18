@@ -6,8 +6,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+
+const page = usePage();
 
 defineProps<{
     status?: string;
@@ -17,12 +19,13 @@ defineProps<{
 const form = useForm({
     email: '',
     password: '',
-    remember: false,
+    userType: 'client',
 });
 
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
+        preserveScroll: true,
     });
 };
 </script>
@@ -36,6 +39,9 @@ const submit = () => {
         </div>
 
         <form @submit.prevent="submit" class="flex flex-col gap-6">
+            <!-- Hidden CSRF token field -->
+            <input type="hidden" name="_token" :value="page.props.csrf_token">
+
             <div class="grid gap-6">
                 <div class="grid gap-2">
                     <Label for="email">Email address</Label>
@@ -71,11 +77,32 @@ const submit = () => {
                     <InputError :message="form.errors.password" />
                 </div>
 
-                <div class="flex items-center justify-between" :tabindex="3">
-                    <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model="form.remember" :tabindex="4" />
-                        <span>Remember me</span>
-                    </Label>
+                <div class="grid gap-2">
+                    <div class="flex items-center justify-between w-full">
+                        <Label class="whitespace-nowrap mr-4">Login as:</Label>
+
+                        <div class="flex items-center space-x-6 w-full justify-end">
+                            <label class="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    name="userType"
+                                    value="administration"
+                                    v-model="form.userType"
+                                />
+                                <span>Administration</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    name="userType"
+                                    value="client"
+                                    v-model="form.userType"
+                                />
+                                <span>Client</span>
+                            </label>
+                        </div>
+                    </div>
+                    <InputError :message="form.errors.userType" />
                 </div>
 
                 <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="form.processing">

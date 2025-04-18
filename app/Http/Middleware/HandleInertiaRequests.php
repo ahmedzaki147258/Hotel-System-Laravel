@@ -45,12 +45,26 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'userType' => $this->getUserType($request),
             ],
+            'csrf_token' => csrf_token(),
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * Determine if the current user is a client or administrator.
+     */
+    protected function getUserType(Request $request): ?string
+    {
+        if (!$request->user()) {
+            return null;
+        }
+
+        return $request->user() instanceof \App\Models\Client ? 'client' : 'administration';
     }
 }

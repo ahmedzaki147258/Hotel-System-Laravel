@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Sanctum\HasApiTokens;
 
 class Client extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -34,6 +36,6 @@ class Client extends Authenticatable
     }
 
     public function country(): BelongsTo {
-        return $this->belongsTo(\Lwwcas\LaravelCountries\Models\Country::class);
+        return $this->belongsTo(\Lwwcas\LaravelCountries\Models\Country::class, 'country_id', 'id');
     }
 }

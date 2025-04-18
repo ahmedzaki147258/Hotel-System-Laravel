@@ -22,11 +22,12 @@ return new class extends Migration
             $table->enum('gender', ['Male', 'Female']);
             $table->string('mobile');
             $table->timestamp('last_login_at')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('restrict');
+            $table->foreignId('approved_by')->nullable()->constrained('staff')->onDelete('restrict');
             $table->timestamp('approved_at')->nullable();
             $table->string('reset_token')->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
