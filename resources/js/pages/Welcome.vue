@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { isAuthenticated } from '@/utils/auth';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
+
+onMounted(()=>{
+    if (isAuthenticated()) {
+        router.visit('/client/dashboard');
+    }
+})
 </script>
 
 <template>

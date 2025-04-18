@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Client;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Cookie;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -27,11 +29,24 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse | Response
     {
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        $token = session('sanctum_token');
+
+        if ($request->userType === 'client') {
+            $client = Client::where('email', $request->email)->first();
+            $client->last_login_at = now();
+            $client->save();
+
+            return Inertia::render('ClientDashboard', [
+                'token' => $token,
+                'token_type' => 'Bearer',
+            ]);
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
@@ -41,7 +56,12 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        Auth::guard('web')->logout();
+        // Determine which guard to use based on which one is authenticated
+        if (Auth::guard('client')->check()) {
+            Auth::guard('client')->logout();
+        } else {
+            Auth::guard('web')->logout();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
