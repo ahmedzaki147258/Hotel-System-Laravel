@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\Client;
-use App\Models\User;
+use App\Models\Staff;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -60,7 +60,7 @@ class LoginRequest extends FormRequest
                 ]);
             }
         } else {
-            $user = User::where('email', $this->email)->first();
+            $user = Staff::where('email', $this->email)->first();
         }
 
         if (! Auth::guard($guard)->attempt($credentials, $remember)) {
