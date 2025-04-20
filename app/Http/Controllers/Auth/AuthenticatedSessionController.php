@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Helpers\CountryHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Client;
@@ -44,7 +45,7 @@ class AuthenticatedSessionController extends Controller
 
             return Inertia::render('ClientDashboard', [
                 'token' => $token,
-                'token_type' => 'Bearer',
+                'countries' => CountryHelper::getVisibleCountries()
             ]);
         }
 

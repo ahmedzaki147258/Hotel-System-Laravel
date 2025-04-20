@@ -1,10 +1,34 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head, usePage, router } from '@inertiajs/vue3';
-import { onMounted } from 'vue';
-import PlaceholderPattern from '../components/PlaceholderPattern.vue';
-import { isAuthenticated, setCookie } from '@/utils/auth';
+import { Head, useForm, usePage, router } from '@inertiajs/vue3';
+import { onMounted, ref } from 'vue';
+import { getCookie, setCookie, removeCookie } from '@/utils/auth';
+import { Calendar, User, Moon, Sun, Clock, LogOut } from 'lucide-vue-next';
+
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+import MakeReservation from './ClientDashboard/MakeReservation.vue';
+import MyReservations from './ClientDashboard/MyReservations.vue';
+import ProfileSettings from './ClientDashboard/ProfileSettings.vue';
+import AppearanceSettings from './ClientDashboard/AppearanceSettings.vue';
+
+interface Client {
+    id: number;
+    name: string;
+    email: string;
+    avatar_image: string;
+    country_id: number;
+    country: string;
+    gender: string;
+    mobile: string;
+}
+
+interface Country {
+    id: number;
+    name: string;
+    iso_alpha_2: string;
+}
 
 interface PageProps {
     flash: {
@@ -16,29 +40,145 @@ interface PageProps {
 }
 
 const page = usePage<PageProps>();
+const client = ref<Client | null>(null);
+const countries = ref<Country[]>([]);
+const activeTab = ref('make-reservation');
+const theme = ref(localStorage.getItem('theme') || 'system');
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Client Dashboard',
-        href: '/client/dashboard',
-    },
-];
+const fetchClientData = async () => {
+  try {
+    const response = await fetch('/api/client/me', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${getCookie('client_token')}`
+      }
+    });
+
+    if (response.ok) {
+      client.value = await response.json();
+    } else {
+      router.visit('/login');
+    }
+  } catch (error) {
+    router.visit('/login');
+  }
+};
 
 onMounted(() => {
-    const token = page.props.token;
-    const tokenType = page.props.token_type;
-
-    if (token) {
-        setCookie('client_token', `${tokenType || 'Bearer'} ${token}`);
-        router.visit('/client/dashboard');
-    } else if (!isAuthenticated()) {
-        router.visit('/login');
+    if (page.props.countries) {
+        countries.value = page.props.countries.data;
     }
+
+    const token = page.props.token;
+    if (token) {
+        setCookie('client_token', token);
+        router.visit('/client/dashboard');
+    }
+
+    fetchClientData();
+    applyTheme(theme.value);
 });
+
+const applyTheme = (selectedTheme: string) => {
+    theme.value = selectedTheme;
+    localStorage.setItem('theme', selectedTheme);
+
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    if (selectedTheme === 'system') {
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        root.classList.add(systemTheme);
+    } else {
+        root.classList.add(selectedTheme);
+    }
+};
+
+const handleLogout = () => {
+    router.post('/client/logout', {}, {
+        onSuccess: () => {
+            removeCookie('client_token');
+        }
+    });
+};
 </script>
 
 <template>
     <Head title="Client Dashboard" />
 
-    <p>Client Dashboard</p>
+    <div class="flex h-screen bg-background">
+        <!-- Sidebar -->
+        <div class="w-1/5 bg-card border-r border-border p-4 flex flex-col">
+            <div v-if="client" class="mb-6">
+                <div class="flex items-center space-x-4 mb-6">
+                    <Avatar class="w-12 h-12">
+                        <AvatarImage :src="client.avatar_image" :alt="client.name" />
+                        <AvatarFallback>{{ client.name.charAt(0) }}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <h2 class="font-semibold">{{ client.name }}</h2>
+                        <p class="text-sm text-muted-foreground">{{ client.email }}</p>
+                    </div>
+                </div>
+                <Separator class="mb-4" />
+            </div>
+
+            <nav class="flex-1 space-y-2">
+                <Button variant="ghost" class="w-full justify-start"
+                    :class="{ 'bg-secondary': activeTab === 'make-reservation' }"
+                    @click="activeTab = 'make-reservation'">
+                    <Calendar class="mr-2 h-4 w-4" />
+                    Make Reservation
+                </Button>
+
+                <Button variant="ghost" class="w-full justify-start"
+                    :class="{ 'bg-secondary': activeTab === 'my-reservations' }" @click="activeTab = 'my-reservations'">
+                    <Clock class="mr-2 h-4 w-4" />
+                    My Reservations
+                </Button>
+
+                <Button variant="ghost" class="w-full justify-start"
+                    :class="{ 'bg-secondary': activeTab === 'profile' }" @click="activeTab = 'profile'">
+                    <User class="mr-2 h-4 w-4" />
+                    Profile
+                </Button>
+
+                <Button variant="ghost" class="w-full justify-start"
+                    :class="{ 'bg-secondary': activeTab === 'appearance' }" @click="activeTab = 'appearance'">
+                    <Sun class="mr-2 h-4 w-4" />
+                    Appearance
+                </Button>
+            </nav>
+
+            <Button variant="destructive" class="w-full mt-auto" @click="handleLogout">
+                <LogOut class="mr-2 h-4 w-4" />
+                Logout
+            </Button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto p-6">
+            <!-- Make Reservation Tab -->
+            <MakeReservation v-if="activeTab === 'make-reservation'" />
+
+            <!-- My Reservations Tab -->
+            <MyReservations v-if="activeTab === 'my-reservations'" />
+
+            <!-- Profile Tab -->
+            <ProfileSettings
+                v-if="activeTab === 'profile' && client"
+                :client="client"
+                :countries="countries"
+                @client-updated="fetchClientData"
+            />
+
+            <!-- Appearance Tab -->
+            <AppearanceSettings
+                v-if="activeTab === 'appearance'"
+                :theme="theme"
+                @updateTheme="applyTheme"
+            />
+        </div>
+    </div>
 </template>

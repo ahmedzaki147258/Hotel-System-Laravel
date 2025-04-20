@@ -51,7 +51,7 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'gender' => 'required|in:Male,Female',
             'country_id' => 'required|exists:lc_countries,id',
-            'mobile' => 'required|string',
+            'mobile' => 'required|string|max:20',
             'avatar_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
