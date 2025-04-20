@@ -1,122 +1,204 @@
 <template>
   <div class="p-6 space-y-6">
-    <h1 class="text-2xl font-semibold">Clients</h1>
+    <h1 class="text-2xl font-semibold">{{ pageTitle }}</h1>
 
     <!-- Create Client Button -->
-    <button
-      @click="goToCreateClient"
-      class="inline-flex items-center px-4 py-2 bg-primary text-black rounded-xl hover:bg-primary/90 transition"
-    >
+    <Button v-if="canCreate" @click="goToCreateClient" variant="default">
       Create Client
-    </button>
+    </Button>
 
     <!-- Clients Table -->
     <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Name</th>
-            <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Email</th>
-            <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 bg-white">
-          <tr
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Mobile</TableHead>
+            <TableHead>Country</TableHead>
+            <TableHead>Gender</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow
             v-for="client in clients"
             :key="client.id"
             class="hover:bg-gray-50 transition"
           >
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">
-              {{ client.name }}
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-700">
-              {{ client.email }}
-            </td>
-            <td class="px-6 py-4 space-x-2">
+            <TableCell class="font-medium">{{ client.name }}</TableCell>
+            <TableCell>{{ client.email }}</TableCell>
+            <TableCell>{{ client.mobile }}</TableCell>
+            <TableCell>{{ client.country }}</TableCell>
+            <TableCell>{{ client.gender }}</TableCell>
+            <TableCell>
+              <Badge v-if="client.approved_by" variant="success">Approved</Badge>
+              <Badge v-else variant="secondary">Pending</Badge>
+            </TableCell>
+            <TableCell class="space-x-2">
+              <!-- Approve Button (for receptionists and unapproved clients) -->
+              <Button 
+                v-if="isReceptionist && !client.approved_by" 
+                @click="approveClient(client.id)"
+                variant="success"
+                size="sm"
+              >
+                Approve
+              </Button>
+              
+              <!-- View Button -->
+              <Button
+                @click="viewClient(client.id)"
+                variant="outline"
+                size="sm"
+              >
+                View
+              </Button>
+              
               <!-- Edit Button -->
-              <button
+              <Button
+                v-if="canEdit(client)"
                 @click="editClient(client.id)"
-                class="inline-flex items-center px-3 py-1 text-sm text-white bg-yellow-500 hover:bg-yellow-600 rounded-lg"
+                variant="secondary"
+                size="sm"
               >
                 Edit
-              </button>
-
+              </Button>
+              
               <!-- Delete Button -->
-              <button
+              <Button
+                v-if="canDelete"
                 @click="openDeleteModal(client.id)"
-                class="inline-flex items-center px-3 py-1 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg"
+                variant="destructive"
+                size="sm"
               >
                 Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              </Button>
+            </TableCell>
+          </TableRow>
+          
+          <!-- No clients message -->
+          <TableRow v-if="clients.length === 0">
+            <TableCell colspan="7" class="text-center py-8">
+              No clients found
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div 
-      v-if="isModalOpen" 
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div class="bg-black p-6 rounded-lg shadow-lg w-96">
-        <h3 class="text-lg font-semibold mb-4">Are you sure you want to delete this client?</h3>
-        <div class="flex justify-end space-x-4">
-          <!-- Cancel Button -->
-          <button
-            @click="closeModal"
-            class="px-4 py-2 text-sm text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300"
-          >
-            Cancel
-          </button>
-          <!-- Confirm Button -->
-          <button
-            @click="confirmDelete"
-            class="px-4 py-2 text-sm text-white bg-red-500 rounded-lg hover:bg-red-600"
-          >
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
+    <AlertDialog :open="isModalOpen" @update:open="closeModal">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Client</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this client? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="closeModal">Cancel</AlertDialogCancel>
+          <AlertDialogAction @click="confirmDelete">Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    clients: Array,
-    canCreate: Boolean,
-  },
-  data() {
-    return {
-      isModalOpen: false,
-      clientToDelete: null, // Store the ID of the client to delete
-    };
-  },
-  methods: {
-    goToCreateClient() {
-      this.$inertia.visit(route('clients.create'));
-    },
-    editClient(clientId) {
-      this.$inertia.get(route('clients.edit', { client: clientId }));
-    },
-    openDeleteModal(clientId) {
-      // Open modal and set client to delete
-      this.clientToDelete = clientId;
-      this.isModalOpen = true;
-    },
-    closeModal() {
-      // Close modal and clear client to delete
-      this.clientToDelete = null;
-      this.isModalOpen = false;
-    },
-    confirmDelete() {
-      // Proceed with deletion
-      this.$inertia.delete(route('clients.destroy', this.clientToDelete));
-      this.closeModal(); // Close the modal after deletion
-    }
+<script setup>
+import { ref, computed } from 'vue';
+import { useForm } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
+
+// Import shadcn-vue components
+import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableHead, 
+  TableRow, 
+  TableCell 
+} from '@/components/ui/table';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+
+// Props
+const props = defineProps({
+  clients: Array,
+  userRole: String,
+});
+
+// State
+const isModalOpen = ref(false);
+const clientToDelete = ref(null);
+
+// Computed properties
+const isManager = computed(() => props.userRole === 'manager' || props.userRole === 'admin');
+const isReceptionist = computed(() => props.userRole === 'receptionist');
+const canCreate = computed(() => true); // Everyone can create clients as per policy
+const canDelete = computed(() => isManager.value);
+
+const pageTitle = computed(() => {
+  if (isReceptionist.value) {
+    return 'Pending Clients';
+  } else {
+    return 'Manage Clients';
   }
+});
+
+// Methods
+function goToCreateClient() {
+  router.visit(route('clients.create'));
+}
+
+function viewClient(clientId) {
+  router.get(route('clients.show', { client: clientId }));
+}
+
+function editClient(clientId) {
+  router.get(route('clients.edit', { client: clientId }));
+}
+
+function approveClient(clientId) {
+  router.post(route('clients.approve', { client: clientId }));
+}
+
+function canEdit(client) {
+  if (isManager.value) {
+    return true;
+  }
+  
+  if (isReceptionist.value && client.approved_by) {
+    return true;
+  }
+  
+  return false;
+}
+
+function openDeleteModal(clientId) {
+  clientToDelete.value = clientId;
+  isModalOpen.value = true;
+}
+
+function closeModal() {
+  clientToDelete.value = null;
+  isModalOpen.value = false;
+}
+
+function confirmDelete() {
+  router.delete(route('clients.destroy', clientToDelete.value));
+  closeModal();
 }
 </script>
-

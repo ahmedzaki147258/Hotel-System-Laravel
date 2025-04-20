@@ -9,24 +9,92 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Lwwcas\LaravelCountries\Models\Country;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class StaffController extends Controller
 {
     use AuthorizesRequests;
-    /**
+     /**
      * Display a listing of the clients.
      */
     public function index()
     {
-
-        // Automatically checks if the user can 'viewAny' and filters clients based on policy logic
+        // Authorize the user to view clients
         $this->authorize('viewAny', Client::class);
-
-        $clients = Client::latest()->get(); // No need to filter here
-
+        
+        $staff = Auth::user();
+        $clients = [];
+        
+        if ($staff->hasRole(['admin', 'manager'])) {
+            // Managers and admins see all clients
+            $clients = Client::with('country')->latest()->get();
+        } elseif ($staff->hasRole('receptionist')) {
+            // Receptionists only see clients that haven't been approved
+            $clients = Client::whereNull('approved_by')->with('country')->latest()->get();
+        }
+        
         return Inertia::render('Clients/Index', [
-            'clients' => $clients,
+            'clients' => $clients->map(function ($client) {
+                return [
+                    'id' => $client->id,
+                    'name' => $client->name,
+                    'email' => $client->email,
+                    'mobile' => $client->mobile,
+                    'country' => $client->country ? $client->country->name : null,
+                    'gender' => $client->gender,
+                    'approved_by' => $client->approved_by,
+                    'approved_at' => $client->approved_at,
+                ];
+            }),
+            'userRole' => $staff->roles->pluck('name')[0] ?? null,
         ]);
+    }
+    
+    /**
+     * Display the receptionist's approved clients.
+     */
+    public function myApprovedClients()
+    {
+        $staff = Auth::user();
+        
+        // Check if user has permission to view own approved clients
+        $this->authorize('viewOwnApprovedClients', Client::class);
+        
+        $clients = Client::where('approved_by', $staff->id)
+                        ->with('country')
+                        ->latest()
+                        ->get();
+        
+        return Inertia::render('Clients/ApprovedClients', [
+            'clients' => $clients->map(function ($client) {
+                return [
+                    'id' => $client->id,
+                    'name' => $client->name,
+                    'email' => $client->email,
+                    'mobile' => $client->mobile,
+                    'country' => $client->country ? $client->country->name : null,
+                    'gender' => $client->gender,
+                    'approved_at' => $client->approved_at,
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * Approve a client
+     */
+    public function approve(Client $client)
+    {
+        $this->authorize('approveClient', Client::class);
+        
+        $staff = Auth::user();
+        
+        $client->update([
+            'approved_by' => $staff->id,
+            'approved_at' => now(),
+        ]);
+        
+        return redirect()->back()->with('success', 'Client approved successfully');
     }
 
     /**
@@ -38,7 +106,7 @@ class StaffController extends Controller
         $this->authorize('view', $client);
 
         return Inertia::render('Clients/Show', [
-            'client' => $client,
+            'client' => $client->load('country'),
         ]);
     }
 
@@ -72,24 +140,39 @@ class StaffController extends Controller
     public function store(Request $request)
     {
         // Check if the user can create a client
-        // $this->authorize('create', Client::class);
+        $this->authorize('create', Client::class);
 
-        // Validation and saving logic
-        $data = $request->all();
+        // Validation
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:clients,email',
+            'password' => 'required|min:8',
+            'country_id' => 'required|exists:lc_countries,id',
+            'gender' => 'required|in:Male,Female',
+            'mobile' => 'required|string',
+            'avatar_image' => 'nullable|image|max:2048',
+        ]);
 
+        $data = $validated;
         $data['password'] = Hash::make($request->input('password'));
 
-        // Validate the image if present
+        // Handle avatar image
         $imagePath = null;
-        if ($data['avatar_image']) {
+        if ($request->hasFile('avatar_image')) {
             $imagePath = $request->file('avatar_image')->store('clients', 'public');
             $data['avatar_image'] = $imagePath;
         }
 
+        // Auto-approve if manager or admin
+        $staff = Auth::user();
+        if ($staff->hasRole(['admin', 'manager'])) {
+            $data['approved_by'] = $staff->id;
+            $data['approved_at'] = now();
+        }
 
         Client::create($data);
 
-        return redirect()->route('clients.index');
+        return redirect()->route('clients.index')->with('success', 'Client created successfully');
     }
 
     /**
@@ -125,16 +208,28 @@ class StaffController extends Controller
         // Check if the user can update the client
         $this->authorize('update', $client);
 
-        $data = $request->all();
+        // Validation
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:clients,email,' . $client->id,
+            'password' => 'nullable|min:8',
+            'country_id' => 'required|exists:lc_countries,id',
+            'gender' => 'required|in:Male,Female',
+            'mobile' => 'required|string',
+            'avatar_image' => 'nullable|image|max:2048',
+        ]);
 
+        $data = $validated;
+        
         // Handle password
         if (empty($data['password'])) {
             unset($data['password']);
         } else {
             $data['password'] = Hash::make($data['password']);
         }
-        $imagePath = null;
-        if ($data['avatar_image']) {
+        
+        // Handle avatar image
+        if ($request->hasFile('avatar_image')) {
             if ($client->avatar_image) {
                 Storage::disk('public')->delete($client->avatar_image);
             }
@@ -143,10 +238,10 @@ class StaffController extends Controller
         } else {
             unset($data['avatar_image']);
         }
-        // Validation and update logic
+
         $client->update($data);
 
-        return redirect()->route('clients.index');
+        return redirect()->route('clients.index')->with('success', 'Client updated successfully');
     }
 
     /**
@@ -155,12 +250,14 @@ class StaffController extends Controller
     public function destroy(Client $client)
     {
         // Check if the user can delete the client
-        //  $this->authorize('delete', $client);
+        $this->authorize('delete', $client);
+        
         if ($client->avatar_image) {
             Storage::disk('public')->delete($client->avatar_image);
         }
+        
         $client->delete();
 
-        return redirect()->route('clients.index')->with('success', 'Client deleted successfully.');
+        return redirect()->route('clients.index')->with('success', 'Client deleted successfully');
     }
 }
