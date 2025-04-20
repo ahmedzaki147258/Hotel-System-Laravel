@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -37,5 +38,9 @@ class Client extends Authenticatable
 
     public function country(): BelongsTo {
         return $this->belongsTo(\Lwwcas\LaravelCountries\Models\Country::class, 'country_id', 'id');
+    }
+
+    public function reservations(): HasMany {
+        return $this->hasMany(Reservation::class, 'client_id', 'id')->latest();
     }
 }
