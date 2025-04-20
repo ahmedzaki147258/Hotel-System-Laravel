@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->as('client.')
         ->namespace('App\Http\Controllers')
         ->group(function () {
+            Route::post('/logout', [ClientController::class, 'logout'])->name('logout');
             Route::patch('/password/change', [ClientController::class, 'changePassword'])->name('password.change');
             Route::post('/image/update', [ClientController::class, 'updateAvatarImage'])->name('image.update');
             Route::patch('/profile/update', [ClientController::class, 'updateProfile'])->name('profile.update');

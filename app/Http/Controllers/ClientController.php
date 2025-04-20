@@ -65,8 +65,18 @@ class ClientController extends Controller
     public function deleteProfile(Request $request)
     {
         $user = $request->user();
+        $user->update(['last_login_at' => null]);
+        $user->tokens()->delete();
         $user->delete();
         return redirect('/login')->with('success', 'Account deleted successfully');
+    }
+
+    public function logout(Request $request)
+    {
+        $user = $request->user();
+        $user->update(['last_login_at' => now()]);
+        $user->tokens()->delete();
+        return redirect('/login')->with('success', 'Logged out successfully');
     }
 
     // use AuthorizesRequests;

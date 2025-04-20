@@ -48,8 +48,13 @@ class LoginRequest extends FormRequest
         $remember = $this->boolean('remember');
         $guard = $this->userType === 'client' ? 'client' : 'web';
         if ($this->userType === 'client') {
-            $user = Client::where('email', $this->email)->first();
+            $user = Client::withTrashed()->where('email', $this->email)->first();
             if (!$user) {
+                throw ValidationException::withMessages([
+                    'email' => trans('auth.failed'),
+                ]);
+            }
+            if ($user->trashed()) {
                 throw ValidationException::withMessages([
                     'email' => trans('account deleted'),
                 ]);
