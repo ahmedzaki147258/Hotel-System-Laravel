@@ -1,6 +1,7 @@
 <?php
 
 use App\Helpers\CountryHelper;
+use App\Http\Controllers\ClientController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\StaffController;
@@ -19,6 +20,19 @@ Route::get('client/dashboard', function () {
     ]);
 })->middleware(['auth:sanctum', 'auth:client'])->name('client.dashboard');
 
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('client')
+        ->as('client.')
+        ->group(function () {
+            Route::post('/logout', [ClientController::class, 'logout'])->name('logout');
+            Route::patch('/password/change', [ClientController::class, 'changePassword'])->name('password.change');
+            Route::post('/image/update', [ClientController::class, 'updateAvatarImage'])->name('image.update');
+            Route::patch('/profile/update', [ClientController::class, 'updateProfile'])->name('profile.update');
+            Route::delete('/profile/delete', [ClientController::class, 'deleteProfile'])->name('profile.delete');
+            Route::get('/reservations', [ClientController::class, 'getReservations'])->name('reservations.index');
+        });
+});
 
 
 
