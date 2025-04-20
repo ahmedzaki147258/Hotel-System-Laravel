@@ -20,7 +20,6 @@ Route::get('client/dashboard', function () {
     ]);
 })->middleware(['auth:sanctum', 'auth:client'])->name('client.dashboard');
 
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('client')
         ->as('client.')
@@ -34,24 +33,27 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 });
 
-
-
-Route::get('/clients/create', [StaffController::class, 'create'])->name('clients.create');
-Route::post('/clients', [StaffController::class, 'store'])->name('clients.store');
-
-
-// View any clients or show specific client
-Route::get('/clients', [StaffController::class, 'index'])->name('clients.index');
-Route::get('/clients/{client}', [StaffController::class, 'show'])->name('clients.show');
-
-// Manager-only routes for editing, updating, and deleting clients
-
-Route::get('/clients/{client}/edit', [StaffController::class, 'edit'])->name('clients.edit');
-
-Route::put('/clients/{client}', [StaffController::class, 'update'])->name('clients.update');
-Route::delete('/clients/{client}', [StaffController::class, 'destroy'])->name('clients.destroy');
-
-
+// Client management routes with proper middleware
+Route::middleware(['auth'])->group(function () {
+    // View any clients or show specific client
+    Route::get('/clients', [StaffController::class, 'index'])->name('clients.index');
+    Route::get('/clients/{client}', [StaffController::class, 'show'])->name('clients.show');
+    
+    // My approved clients (for receptionists)
+    Route::get('/my-approved-clients', [StaffController::class, 'myApprovedClients'])->name('clients.approved');
+    
+    // Approve client route
+    Route::post('/clients/{client}/approve', [StaffController::class, 'approve'])->name('clients.approve');
+    
+    // Create and store client routes
+    Route::get('/clients/create', [StaffController::class, 'create'])->name('clients.create');
+    Route::post('/clients', [StaffController::class, 'store'])->name('clients.store');
+    
+    // Edit, update, and delete client routes
+    Route::get('/clients/{client}/edit', [StaffController::class, 'edit'])->name('clients.edit');
+    Route::put('/clients/{client}', [StaffController::class, 'update'])->name('clients.update');
+    Route::delete('/clients/{client}', [StaffController::class, 'destroy'])->name('clients.destroy');
+});
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
