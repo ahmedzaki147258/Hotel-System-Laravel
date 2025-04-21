@@ -36,22 +36,27 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/reservations', [ClientController::class, 'makeReservation'])->name('reservations.store');
         });
 });
+Route::middleware(['auth'])->group(function () {
+    // View any clients or show specific client
+    Route::get('/clients', [ClientManagementController::class, 'index'])->name('clients.index');
+    Route::get('/clients/{client}', [ClientManagementController::class, 'show'])->name('clients.show');
 
+    // My approved clients (for receptionists)
+    Route::get('/my-approved-clients', [ClientManagementController::class, 'myApprovedClients'])->name('clients.approved');
 
-Route::get('/clients/create', [ClientManagementController::class, 'create'])->name('clients.create');
-Route::post('/clients', [ClientManagementController::class, 'store'])->name('clients.store');
+    // Approve client route
+    Route::post('/clients/{client}/approve', [ClientManagementController::class, 'approve'])->name('clients.approve');
 
+    // Create and store client routes
+    Route::get('/clients/create', [ClientManagementController::class, 'create'])->name('clients.create');
+    Route::post('/clients', [ClientManagementController::class, 'store'])->name('clients.store');
 
-// View any clients or show specific client
-Route::get('/clients', [ClientManagementController::class, 'index'])->name('clients.index');
-Route::get('/clients/{client}', [ClientManagementController::class, 'show'])->name('clients.show');
+    // Edit, update, and delete client routes
+    Route::get('/clients/{client}/edit', [ClientManagementController::class, 'edit'])->name('clients.edit');
+    Route::put('/clients/{client}', [ClientManagementController::class, 'update'])->name('clients.update');
+    Route::delete('/clients/{client}', [ClientManagementController::class, 'destroy'])->name('clients.destroy');
+});
 
-// Manager-only routes for editing, updating, and deleting clients
-
-Route::get('/clients/{client}/edit', [ClientManagementController::class, 'edit'])->name('clients.edit');
-
-Route::put('/clients/{client}', [ClientManagementController::class, 'update'])->name('clients.update');
-Route::delete('/clients/{client}', [ClientManagementController::class, 'destroy'])->name('clients.destroy');
 
 //receptionists
 Route::match(['PUT', 'POST'], 'receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
