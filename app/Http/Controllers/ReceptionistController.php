@@ -18,14 +18,17 @@ class ReceptionistController extends Controller
     /**
      * Display a listing of the receptionists.
      */
-    public function index()
-    {
-        // $this->authorize('viewAny', Staff::class);
 
-        $receptionists = Staff::role('receptionist')->latest()->get();
+    public function index(Request $request)
+    {
+        $limit = $request->limit ?? 5;
+        $page = $request->page ?? 1;
+
+        $receptionists = Staff::role('receptionist')
+            ->paginate($limit, ['*'], 'page', $page);
 
         return Inertia::render('Receptionists/Index', [
-            'receptionists' => $receptionists->map(function ($receptionist) {
+            'receptionists' => $receptionists->through(function ($receptionist) {
                 return [
                     'id' => $receptionist->id,
                     'name' => $receptionist->name,
@@ -33,8 +36,15 @@ class ReceptionistController extends Controller
                     'national_id' => $receptionist->national_id,
                     'avatar' => $receptionist->avatar_image ? Storage::url($receptionist->avatar_image) : Storage::url('receptionists/default-avatar.png'),
                     'is_banned' => $receptionist->isBanned(),
+                    'created_at' => $receptionist->created_at
                 ];
             }),
+            'pagination' => [
+                'current_page' => $receptionists->currentPage(),
+                'last_page' => $receptionists->lastPage(),
+                'per_page' => $receptionists->perPage(),
+                'total' => $receptionists->total(),
+            ],
         ]);
     }
 

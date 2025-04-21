@@ -22,6 +22,7 @@ class Staff extends Authenticatable implements BannableContract
         'password',
         'national_id',
         'avatar_image',
+        'created_at'
     ];
 
     protected $hidden = [

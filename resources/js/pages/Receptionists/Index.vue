@@ -12,27 +12,19 @@
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>National ID</TableHead>
-              <TableHead>Avatar</TableHead>
+              <TableHead>Created At</TableHead>
               <TableHead class="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow
-              v-for="receptionist in receptionists"
+              v-for="receptionist in receptionists.data"
               :key="receptionist.id"
               class="hover:bg-muted transition"
             >
               <TableCell>{{ receptionist.name }}</TableCell>
               <TableCell>{{ receptionist.email }}</TableCell>
-              <TableCell>{{ receptionist.national_id }}</TableCell>
-              <TableCell>
-                <img
-                  :src="receptionist.avatar"
-                  alt="Avatar"
-                  class="w-10 h-10 rounded-full object-cover"
-                />
-              </TableCell>
+              <TableCell>{{ formatDate(receptionist.created_at) }}</TableCell>
               <TableCell class="text-right space-x-2">
                 <Button variant="outline" size="sm" @click="editReceptionist(receptionist.id)">
                   Edit
@@ -53,6 +45,29 @@
         </Table>
       </CardContent>
     </Card>
+
+    <!-- Pagination Controls -->
+    <div class="flex justify-end items-center space-x-2 mt-4">
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="!receptionists.prev_page_url"
+        @click="changePage(receptionists.current_page - 1)"
+      >
+        Previous
+      </Button>
+      <span class="text-sm text-muted-foreground">
+        Page {{ receptionists.current_page }} of {{ receptionists.last_page }}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="!receptionists.next_page_url"
+        @click="changePage(receptionists.current_page + 1)"
+      >
+        Next
+      </Button>
+    </div>
 
     <!-- Delete Confirmation Modal -->
     <Dialog v-model:open="isModalOpen">
@@ -82,7 +97,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 defineProps({
-  receptionists: Array,
+  receptionists: Object,
 })
 
 const isModalOpen = ref(false)
@@ -112,8 +127,26 @@ const confirmDelete = () => {
 }
 
 const toggleBan = (id, isBanned) => {
-  console.log(isBanned);
   const routeName = isBanned ? 'receptionists.unban' : 'receptionists.ban'
   router.post(route(routeName, { receptionist: id }))
+}
+
+const changePage = (page) => {
+  router.visit(route('receptionists.index', { page }), {
+    preserveScroll: true,
+    preserveState: true,
+  })
+}
+
+// ✅ Optional date formatter
+const formatDate = (timestamp) => {
+  const date = new Date(timestamp)
+  return date.toLocaleString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 </script>
