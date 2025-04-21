@@ -63,7 +63,7 @@ class ClientManagementController extends Controller
     }
 
     /**
-     * Display the receptionist's approved clients.
+     * Display the approved clients.
      */
     public function myApprovedClients()
     {
@@ -116,19 +116,6 @@ class ClientManagementController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Client approved successfully');
-    }
-
-    /**
-     * Display the specified client.
-     */
-    public function show(Client $client)
-    {
-        // Check if the user can view the client using the policy's 'view' method
-        $this->authorize('view', $client);
-
-        return Inertia::render('Clients/Show', [
-            'client' => $client->load('country'),
-        ]);
     }
 
     /**
