@@ -1,4 +1,7 @@
 <template>
+ <Head :title="pageTitle" />
+
+<AppLayout :breadcrumbs="breadcrumbs">
   <div class="max-w-md mx-auto space-y-6 p-6 bg-white rounded-2xl shadow-md">
     <h1 class="text-2xl font-semibold text-black">Create Receptionist</h1>
 
@@ -73,13 +76,30 @@
       </div>
     </form>
   </div>
+</AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Receptionists',
+    href: '/receptionists',
+  },
+  {
+    title: 'Create Receptionists',
+    href: '/receptionists/create',
+  }
+];
 
 const form = useForm({
   name: '',

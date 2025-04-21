@@ -50,27 +50,28 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clients/{client}/edit', [ClientManagementController::class, 'edit'])->name('clients.edit');
     Route::put('/clients/{client}', [ClientManagementController::class, 'update'])->name('clients.update');
     Route::delete('/clients/{client}', [ClientManagementController::class, 'destroy'])->name('clients.destroy');
+
+    //receptionists
+    Route::resource('receptionists', ReceptionistController::class);
+    Route::post('/receptionists/{receptionist}/ban', [ReceptionistController::class, 'ban'])->name('receptionists.ban');
+    Route::post('/receptionists/{receptionist}/unban', [ReceptionistController::class, 'unban'])->name('receptionists.unban');
 });
 
-//receptionists
-Route::match(['PUT', 'POST'], 'receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
 
-// View any clients or show specific client
-Route::get('/receptionists', [ReceptionistController::class, 'index'])->name('receptionists.index');
-// Display the receptionists edit page
-Route::get('/receptionists/{receptionist}/edit', [ReceptionistController::class, 'edit'])->name('receptionists.edit');
-Route::get('/receptionists/create', [ReceptionistController::class, 'create'])->name('receptionists.create');
+// Route::match(['PUT', 'POST'], 'receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
 
-Route::delete('receptionists/{receptionist}', [ReceptionistController::class, 'destroy'])->name('receptionists.destroy');
-// Update client information
-Route::put('receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
+// // View any clients or show specific client
+// Route::get('/receptionists', [ReceptionistController::class, 'index'])->name('receptionists.index');
+// // Display the receptionists edit page
+// Route::get('/receptionists/{receptionist}/edit', [ReceptionistController::class, 'edit'])->name('receptionists.edit');
+// Route::get('/receptionists/create', [ReceptionistController::class, 'create'])->name('receptionists.create');
 
-
-Route::post('/receptionists', [ReceptionistController::class, 'store'])->name('receptionists.store');
-Route::post('/receptionists/{receptionist}/ban', [ReceptionistController::class, 'ban'])->name('receptionists.ban');
-Route::post('/receptionists/{receptionist}/unban', [ReceptionistController::class, 'unban'])->name('receptionists.unban');
+// Route::delete('receptionists/{receptionist}', [ReceptionistController::class, 'destroy'])->name('receptionists.destroy');
+// // Update client information
+// Route::put('receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
 
 
+//Route::post('/receptionists', [ReceptionistController::class, 'store'])->name('receptionists.store');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

@@ -1,4 +1,7 @@
 <template>
+  <Head :title="pageTitle" />
+
+<AppLayout :breadcrumbs="breadcrumbs">
   <div class="max-w-md mx-auto space-y-6 p-6 bg-white rounded-2xl shadow-md">
     <h1 class="text-2xl font-semibold text-black">Edit Receptionist</h1>
 
@@ -75,9 +78,12 @@
       
     </form>
   </div>
+</AppLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
 import { useForm } from '@inertiajs/vue3';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -87,6 +93,17 @@ import { Button } from '@/components/ui/button';
 const props = defineProps({
   receptionist: Object
 });
+
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Receptionists',
+    href: '/receptionists',
+  },
+  {
+    title: 'Edit Receptionists',
+    href: `/receptionists/${props.receptionist.id}/edit`,
+  }
+];
 
 // Initialize form with existing receptionist data
 const form = useForm({

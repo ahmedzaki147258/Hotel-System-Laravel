@@ -1,4 +1,7 @@
 <template>
+  <Head :title="pageTitle" />
+
+ <AppLayout :breadcrumbs="breadcrumbs">
   <div class="space-y-6 p-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-semibold">Receptionists</h1>
@@ -85,11 +88,15 @@
       </DialogContent>
     </Dialog>
   </div>
+</AppLayout>
 </template>
 
-<script setup>
-import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { router } from '@inertiajs/vue3';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -102,6 +109,13 @@ defineProps({
 
 const isModalOpen = ref(false)
 const receptionistToDelete = ref(null)
+
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Receptionists',
+    href: '/receptionists',
+  }
+];
 
 const goToCreateReceptionist = () => {
   router.visit(route('receptionists.create'))
