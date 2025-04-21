@@ -4,7 +4,8 @@ use App\Helpers\CountryHelper;
 use App\Http\Controllers\ClientController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\StaffController;
+use App\Http\Controllers\ClientManagementController;
+use App\Http\Controllers\ReceptionistController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -36,27 +37,41 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 });
 
-// Client management routes with proper middleware
-Route::middleware(['auth'])->group(function () {
-    // View any clients or show specific client
-    Route::get('/clients', [StaffController::class, 'index'])->name('clients.index');
-    Route::get('/clients/{client}', [StaffController::class, 'show'])->name('clients.show');
-    
-    // My approved clients (for receptionists)
-    Route::get('/my-approved-clients', [StaffController::class, 'myApprovedClients'])->name('clients.approved');
-    
-    // Approve client route
-    Route::post('/clients/{client}/approve', [StaffController::class, 'approve'])->name('clients.approve');
-    
-    // Create and store client routes
-    Route::get('/clients/create', [StaffController::class, 'create'])->name('clients.create');
-    Route::post('/clients', [StaffController::class, 'store'])->name('clients.store');
-    
-    // Edit, update, and delete client routes
-    Route::get('/clients/{client}/edit', [StaffController::class, 'edit'])->name('clients.edit');
-    Route::put('/clients/{client}', [StaffController::class, 'update'])->name('clients.update');
-    Route::delete('/clients/{client}', [StaffController::class, 'destroy'])->name('clients.destroy');
-});
+
+Route::get('/clients/create', [ClientManagementController::class, 'create'])->name('clients.create');
+Route::post('/clients', [ClientManagementController::class, 'store'])->name('clients.store');
+
+
+// View any clients or show specific client
+Route::get('/clients', [ClientManagementController::class, 'index'])->name('clients.index');
+Route::get('/clients/{client}', [ClientManagementController::class, 'show'])->name('clients.show');
+
+// Manager-only routes for editing, updating, and deleting clients
+
+Route::get('/clients/{client}/edit', [ClientManagementController::class, 'edit'])->name('clients.edit');
+
+Route::put('/clients/{client}', [ClientManagementController::class, 'update'])->name('clients.update');
+Route::delete('/clients/{client}', [ClientManagementController::class, 'destroy'])->name('clients.destroy');
+
+//receptionists
+Route::match(['PUT', 'POST'], 'receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
+
+// View any clients or show specific client
+Route::get('/receptionists', [ReceptionistController::class, 'index'])->name('receptionists.index');
+// Display the receptionists edit page
+Route::get('/receptionists/{receptionist}/edit', [ReceptionistController::class, 'edit'])->name('receptionists.edit');
+Route::get('/receptionists/create', [ReceptionistController::class, 'create'])->name('receptionists.create');
+
+Route::delete('receptionists/{receptionist}', [ReceptionistController::class, 'destroy'])->name('receptionists.destroy');
+// Update client information
+Route::put('receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
+
+
+Route::post('/receptionists', [ReceptionistController::class, 'store'])->name('receptionists.store');
+Route::post('/receptionists/{receptionist}/ban', [ReceptionistController::class, 'ban'])->name('receptionists.ban');
+Route::post('/receptionists/{receptionist}/unban', [ReceptionistController::class, 'unban'])->name('receptionists.unban');
+
+
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
