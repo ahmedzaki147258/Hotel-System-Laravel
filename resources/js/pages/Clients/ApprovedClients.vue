@@ -1,47 +1,7 @@
-<template>
-  <div class="p-6 space-y-6">
-    <h1 class="text-2xl font-semibold">My Approved Clients</h1>
-    
-    <!-- Clients Table -->
-    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Mobile</TableHead>
-            <TableHead>Country</TableHead>
-            <TableHead>Gender</TableHead>
-            <TableHead>Approved Date</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow
-            v-for="client in clients"
-            :key="client.id"
-            class="hover:bg-gray-50 transition"
-          >
-            <TableCell class="font-medium">{{ client.name }}</TableCell>
-            <TableCell>{{ client.email }}</TableCell>
-            <TableCell>{{ client.mobile }}</TableCell>
-            <TableCell>{{ client.country }}</TableCell>
-            <TableCell>{{ client.gender }}</TableCell>
-            <TableCell>{{ formatDate(client.approved_at) }}</TableCell>
-          </TableRow>
-          
-          <!-- No clients message -->
-          <TableRow v-if="clients.length === 0">
-            <TableCell :colspan="canEdit ? 7 : 6" class="text-center py-8">
-              You haven't approved any clients yet
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </div>
-  </div>
-</template>
-
-<script setup>
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 
 // Import shadcn-vue components
@@ -65,6 +25,13 @@ const props = defineProps({
   userRole: String
 });
 
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'My Approved Clients',
+    href: '/my-approved-clients',
+  }
+];
+
 function formatDate(dateString) {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -77,3 +44,52 @@ function formatDate(dateString) {
   });
 }
 </script>
+
+<template>
+  <Head title="My Approved Clients" />
+
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+      <div class="p-6 space-y-6">
+        <h1 class="text-2xl font-semibold">My Approved Clients</h1>
+        
+        <!-- Clients Table -->
+        <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Mobile</TableHead>
+                <TableHead>Country</TableHead>
+                <TableHead>Gender</TableHead>
+                <TableHead>Approved Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow
+                v-for="client in clients"
+                :key="client.id"
+                class="hover:bg-gray-50 transition"
+              >
+                <TableCell class="font-medium">{{ client.name }}</TableCell>
+                <TableCell>{{ client.email }}</TableCell>
+                <TableCell>{{ client.mobile }}</TableCell>
+                <TableCell>{{ client.country }}</TableCell>
+                <TableCell>{{ client.gender }}</TableCell>
+                <TableCell>{{ formatDate(client.approved_at) }}</TableCell>
+              </TableRow>
+              
+              <!-- No clients message -->
+              <TableRow v-if="clients.length === 0">
+                <TableCell :colspan="canEdit ? 7 : 6" class="text-center py-8">
+                  You haven't approved any clients yet
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  </AppLayout>
+</template>

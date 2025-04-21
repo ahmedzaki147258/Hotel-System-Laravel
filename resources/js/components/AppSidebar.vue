@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, UserCog, User, CheckCircle } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -13,6 +13,26 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Manage Managers',
+        href: '/managers', // You may need to update this based on your actual route
+        icon: UserCog,
+    },
+    {
+        title: 'Manage Receptionists',
+        href: '/receptionists', // You may need to update this based on your actual route
+        icon: UserCog,
+    },
+    {
+        title: 'Manage Clients',
+        href: '/clients',
+        icon: Users,
+    },
+    {
+        title: 'My Approved Clients',
+        href: '/my-approved-clients',
+        icon: CheckCircle,
     },
 ];
 
