@@ -37,19 +37,13 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 });
 
-// Client management routes
+
 Route::middleware(['auth'])->group(function () {
-    Route::get('/clients', [ClientManagementController::class, 'index'])->name('clients.index');
     
-    Route::get('/clients/create', [ClientManagementController::class, 'create'])->name('clients.create');
-    Route::post('/clients', [ClientManagementController::class, 'store'])->name('clients.store');
-    
+    // Client management routes
+    Route::resource('clients', ClientManagementController::class);
     Route::get('/my-approved-clients', [ClientManagementController::class, 'myApprovedClients'])->name('clients.approved');
     Route::post('/clients/{client}/approve', [ClientManagementController::class, 'approve'])->name('clients.approve');
-    
-    Route::get('/clients/{client}/edit', [ClientManagementController::class, 'edit'])->name('clients.edit');
-    Route::put('/clients/{client}', [ClientManagementController::class, 'update'])->name('clients.update');
-    Route::delete('/clients/{client}', [ClientManagementController::class, 'destroy'])->name('clients.destroy');
 
     //receptionists
     Route::resource('receptionists', ReceptionistController::class);

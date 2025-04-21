@@ -100,8 +100,10 @@ function closeModal() {
 }
 
 function confirmDelete() {
+  console.log('Confirming delete for client:', clientToDelete.value);
   if (clientToDelete.value) {
-    router.delete(route('clients.destroy', clientToDelete.value));
+    console.log('Delete URL:', route('clients.destroy', { client: clientToDelete.value }));
+    router.delete(route('clients.destroy', { client: clientToDelete.value }));
   }
   closeModal();
 }
@@ -113,13 +115,14 @@ function confirmDelete() {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="p-6 space-y-6">
+        <div class="flex items-center justify-between">
         <h1 class="text-2xl font-semibold">{{ pageTitle }}</h1>
-
         <!-- Create Client Button -->
         <Button v-if="canCreate" @click="goToCreateClient" variant="default">
           Create Client
         </Button>
 
+      </div>
         <!-- Clients Table -->
         <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
           <Table>
@@ -150,16 +153,6 @@ function confirmDelete() {
                   <Badge v-else variant="secondary">Pending</Badge>
                 </TableCell>
                 <TableCell v-if="shouldShowActions" class="space-x-2">
-                  <!-- Approve Button (for unapproved clients) -->
-                  <Button 
-                    v-if="!client.approved_by" 
-                    @click="approveClient(client.id)"
-                    variant="success"
-                    size="sm"
-                  >
-                    Approve
-                  </Button>
-                  
                   <!-- Edit Button (for admin/manager only) -->
                   <Button
                     v-if="isAdminOrManager"
@@ -178,6 +171,16 @@ function confirmDelete() {
                     size="sm"
                   >
                     Delete
+                  </Button>
+
+                    <!-- Approve Button (for unapproved clients) -->
+                    <Button 
+                    v-if="!client.approved_by" 
+                    @click="approveClient(client.id)"
+                    variant="success"
+                    size="sm"
+                  >
+                    Approve
                   </Button>
                 </TableCell>
               </TableRow>
