@@ -12,23 +12,7 @@ import MakeReservation from './ClientDashboard/MakeReservation.vue';
 import MyReservations from './ClientDashboard/MyReservations.vue';
 import ProfileSettings from './ClientDashboard/ProfileSettings.vue';
 import AppearanceSettings from './ClientDashboard/AppearanceSettings.vue';
-
-interface Client {
-    id: number;
-    name: string;
-    email: string;
-    avatar_image: string;
-    country_id: number;
-    country: string;
-    gender: string;
-    mobile: string;
-}
-
-interface Country {
-    id: number;
-    name: string;
-    iso_alpha_2: string;
-}
+import { Client, Country } from '@/interfaces/model.interface';
 
 interface PageProps {
     flash: {

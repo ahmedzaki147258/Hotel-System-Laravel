@@ -16,23 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-interface Client {
-    id: number;
-    name: string;
-    email: string;
-    avatar_image: string;
-    country_id: number;
-    country: string;
-    gender: string;
-    mobile: string;
-}
-
-interface Country {
-    id: number;
-    name: string;
-    iso_alpha_2: string;
-}
+import { Client, Country } from '@/interfaces/model.interface';
 
 const props = defineProps<{
     client: Client;

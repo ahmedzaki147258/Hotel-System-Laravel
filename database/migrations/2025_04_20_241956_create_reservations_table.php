@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained('clients')->onDelete('restrict');
-            //$table->foreignId('room_id')->constrained()->onDelete('restrict');
+            $table->foreignId('room_id')->constrained('rooms')->onDelete('restrict');
             $table->unsignedInteger('accompany_number');
-            $table->unsignedBigInteger('paid_price_in_cents'); // Actual price paid
-            $table->string('payment_id')->nullable(); // For Stripe payment ID
-            $table->timestamp('check_out_at')->nullable();
+            $table->unsignedBigInteger('paid_price_in_cents');
+            $table->string('payment_id');
+            $table->timestamp('check_out_at');
             $table->timestamps();
         });
     }

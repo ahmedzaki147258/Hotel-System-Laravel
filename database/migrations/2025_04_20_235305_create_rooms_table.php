@@ -20,7 +20,6 @@ return new class extends Migration {
             $table->foreignId('manager_id')->constrained('staff')->onDelete('restrict');
             $table->timestamps();
             $table->softDeletes();
-
         });
     }
 
