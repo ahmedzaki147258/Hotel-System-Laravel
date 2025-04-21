@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\CountryResource;
+use App\Http\Resources\FloorResource;
 use App\Http\Resources\ReservationResource;
-use App\Models\Client;
+use App\Http\Resources\RoomResource;
+use App\Models\Floor;
+use App\Models\Reservation;
+use App\Models\Room;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
-use Lwwcas\LaravelCountries\Models\Country;
 
 class ClientController extends Controller
 {
@@ -87,5 +89,51 @@ class ClientController extends Controller
         $user = $request->user();
         $reservations = $user->reservations()->paginate($limit, ['*'], 'page', $page);
         return ReservationResource::collection($reservations);
+    }
+
+    /*************************************** Make Reservation ***************************************/
+    public function getFloors()
+    {
+        $floors = Floor::all();
+        return FloorResource::collection($floors);
+    }
+
+    public function getRoomsByFloor($floorId)
+    {
+        $floor = Floor::find($floorId);
+        $rooms = $floor->rooms;
+        return RoomResource::collection($rooms);
+    }
+
+    public function makeReservation(Request $request)
+    {
+        $request->validate([
+            'room_id' => 'required|exists:rooms,id',
+            'payment_id' => 'required|string',
+            'accompany_number' => 'required|integer|min:1',
+            'check_out_at' => 'required|date|after:now',
+        ]);
+
+        $room = Room::find($request->room_id);
+        if ($room->status !== 'available') {
+            return back()->with('error', 'Room is not available');
+        }
+        if ($room->capacity < $request->accompany_number) {
+            return back()->with('error', 'Room capacity is not enough');
+        }
+
+        $checkOut = Carbon::parse($request->check_out_at);
+        $days = now()->startOfDay()->diffInDays($checkOut->startOfDay());
+        Reservation::create([
+            'client_id' => $request->user()->id,
+            'room_id' => $request->room_id,
+            'payment_id' => $request->payment_id,
+            'accompany_number' => $request->accompany_number,
+            'paid_price_in_cents' => $room->price * max(1, $days),
+            'check_out_at' => $request->check_out_at,
+        ]);
+
+        $room->update(['status' => 'unavailable']);
+        return back()->with('success', 'Reservation created successfully');
     }
 }

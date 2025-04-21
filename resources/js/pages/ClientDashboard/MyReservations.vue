@@ -16,17 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-
-interface Reservation {
-    id: number;
-    client_id: number;
-    accompany_number: number;
-    paid_price_in_cents: number;
-    paid_price_in_dollars: string;
-    payment_id: string;
-    created_at: string;
-    check_out_at: string;
-}
+import { Reservation } from '@/interfaces/model.interface';
 
 const loading = ref(false);
 const data = ref<Reservation[]>([]);
@@ -37,34 +27,14 @@ const pagination = ref<PaginationState>({
 const totalItems = ref(0);
 const totalPages = ref(1);
 
-// Columns definition
 const columns = [
     {
-        accessorKey: 'id',
-        header: 'ID',
+        accessorKey: 'room.floor.number',
+        header: 'Floor',
     },
     {
-        accessorKey: 'created_at',
-        header: 'Created At',
-        cell: (info: any) => formatDate(info.getValue()),
-    },
-    {
-        accessorKey: 'check_out_at',
-        header: 'Check Out At',
-        cell: (info: any) => formatDate(info.getValue()),
-    },
-    {
-        accessorKey: 'accompany_number',
-        header: 'Guests',
-    },
-    {
-        accessorKey: 'paid_price_in_dollars',
-        header: 'Paid Price',
-    },
-    {
-        accessorKey: 'payment_id',
-        header: 'Payment ID',
-        cell: (info: any) => `${info.getValue().slice(0, 8)}...`,
+        accessorKey: 'room.number',
+        header: 'Room',
     },
     {
         accessorKey: 'check_out_at',
@@ -78,6 +48,24 @@ const columns = [
                 return h('span', { class: 'text-green-600 font-medium' }, 'Ongoing');
             }
         },
+    },
+    {
+        accessorKey: 'accompany_number',
+        header: 'Guests',
+    },
+    {
+        accessorKey: 'paid_price_in_dollars',
+        header: 'Paid Price',
+    },
+    {
+        accessorKey: 'check_in_at',
+        header: 'Check In At',
+        cell: (info: any) => formatDate(info.getValue()),
+    },
+    {
+        accessorKey: 'check_out_at',
+        header: 'Check Out At',
+        cell: (info: any) => formatDate(info.getValue()),
     },
 ];
 

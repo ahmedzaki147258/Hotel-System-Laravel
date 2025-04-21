@@ -1,15 +1,309 @@
 <script setup lang="ts">
+import 'swiper/css';
+import { ref, onMounted, reactive, computed } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Calendar } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Calendar, Users, DollarSign, Home } from 'lucide-vue-next';
+import { Floor, Room } from '@/interfaces/model.interface';
+
+const floors = ref<Floor[]>([]);
+const roomsByFloor = ref<Record<number, Room[]>>({});
+const loading = ref(true);
+const currentFloorId = ref<number | null>(null);
+const reservationDialog = ref(false);
+const selectedRoom = ref<Room | null>(null);
+const accompanyNumber = ref(1);
+const errorMessage = ref('');
+const successMessage = ref('');
+
+const form = reactive({
+  room_id: '',
+  accompany_number: 1,
+  check_out_at: '',
+  payment_id: 'placeholder-payment-id' // In a real app, this would come from a payment gateway
+});
+
+onMounted(async () => {
+  try {
+    const response = await fetch('/client/floors');
+    const res = await response.json();
+    floors.value = res.data;
+
+    if (floors.value.length > 0) {
+      currentFloorId.value = floors.value[0].id;
+      await loadRooms(currentFloorId.value);
+    }
+  } catch (error) {
+    console.error('Error loading floors:', error);
+  } finally {
+    loading.value = false;
+  }
+});
+
+const loadRooms = async (floorId: number) => {
+  try {
+    const response = await fetch(`/client/floors/${floorId}/rooms`);
+    const res = await response.json();
+    roomsByFloor.value[floorId] = res.data;
+    currentFloorId.value = floorId;
+  } catch (error) {
+    console.error('Error loading rooms:', error);
+  }
+};
+
+const openReservationDialog = (room: Room) => {
+  if (room.status !== 'available') {
+    errorMessage.value = 'This room is not available for reservation.';
+    return;
+  }
+
+  selectedRoom.value = room;
+  form.room_id = room.id.toString();
+  form.accompany_number = 1;
+  accompanyNumber.value = 1;
+
+  // Set default checkout date to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  form.check_out_at = tomorrow.toISOString().split('T')[0];
+
+  reservationDialog.value = true;
+  errorMessage.value = '';
+};
+
+const validateAccompanyNumber = () => {
+  if (!selectedRoom.value) return false;
+
+  if (form.accompany_number > selectedRoom.value.capacity) {
+    errorMessage.value = `Maximum allowed guests for this room is ${selectedRoom.value.capacity}.`;
+    return false;
+  }
+
+  if (form.accompany_number < 1) {
+    errorMessage.value = 'Number of guests must be at least 1.';
+    return false;
+  }
+
+  errorMessage.value = '';
+  return true;
+};
+
+const makeReservation = async () => {
+  if (!validateAccompanyNumber()) return;
+
+  try {
+    router.post('/client/reservations', form, {
+        forceFormData: true,
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: async () => {
+            successMessage.value = 'Reservation created successfully!';
+            reservationDialog.value = false;
+        },
+        onError: (errors) => {
+            errorMessage.value = errors.message;
+        }
+    });
+
+    await loadRooms(currentFloorId.value ?? 0);
+    setTimeout(() => {
+      successMessage.value = '';
+    }, 3000);
+  } catch (error: any) {
+    errorMessage.value = error.response?.data?.message || 'Failed to create reservation.';
+  }
+};
+
+const roomsForCurrentFloor = computed(() => {
+  return roomsByFloor.value[currentFloorId.value ?? 0] || [];
+});
+
+// Random room image URL - in a real app, this would be unique per room or category
+const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80";
 </script>
 
 <template>
+  <div class="space-y-6">
     <h1 class="text-2xl font-bold mb-6">Make Reservation</h1>
-    <Alert>
-        <Calendar class="h-4 w-4" />
-        <AlertTitle>Coming Soon!</AlertTitle>
-        <AlertDescription>
-            Room reservation feature will be available soon. We're finishing up the final touches!
-        </AlertDescription>
+
+    <!-- Success message -->
+    <Alert v-if="successMessage" class="bg-green-50 border-green-500 mb-4">
+      <Calendar class="h-4 w-4 text-green-500" />
+      <AlertTitle class="text-green-700">Success!</AlertTitle>
+      <AlertDescription class="text-green-600">{{ successMessage }}</AlertDescription>
     </Alert>
+
+    <!-- Loading state -->
+    <div v-if="loading" class="flex items-center justify-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+
+    <div v-else-if="floors.length === 0" class="text-center p-8">
+      <Alert>
+        <AlertTitle>No Floors Available</AlertTitle>
+        <AlertDescription>
+          There are currently no floors available in the system.
+        </AlertDescription>
+      </Alert>
+    </div>
+
+    <div v-else class="space-y-8">
+      <!-- Floors Slider -->
+      <div class="p-4 bg-gray-50 rounded-lg">
+        <h2 class="text-lg font-semibold mb-3">Select Floor</h2>
+        <Swiper
+          :slides-per-view="3.5"
+          :space-between="10"
+          :grab-cursor="true"
+          :breakpoints="{
+            '640': { slidesPerView: 4.5 },
+            '768': { slidesPerView: 5.5 },
+            '1024': { slidesPerView: 6.5 }
+          }"
+        >
+          <SwiperSlide
+            v-for="floor in floors"
+            :key="floor.id"
+            class="cursor-pointer"
+          >
+            <div
+              class="p-4 text-center rounded-lg hover:bg-primary/10 transition-colors"
+              :class="{ 'bg-primary/20 font-bold': currentFloorId === floor.id }"
+              @click="loadRooms(floor.id)"
+            >
+              <Home class="h-5 w-5 mx-auto mb-1" />
+              <p>{{ floor.number }}</p>
+              <p class="text-xs text-gray-500">{{ floor.name }}</p>
+            </div>
+          </SwiperSlide>
+        </Swiper>
+      </div>
+
+      <!-- Rooms Container -->
+      <div class="mb-4">
+        <h2 class="text-lg font-semibold mb-3">Available Rooms</h2>
+        <div class="overflow-y-auto max-h-[500px] pr-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              v-for="room in roomsForCurrentFloor"
+              :key="room.id"
+              class="bg-white rounded-lg shadow-md overflow-hidden border"
+            >
+              <!-- Room Image with Status Badge -->
+              <div class="relative">
+                <img :src="roomImageUrl" alt="Room" class="w-full h-48 object-cover" />
+                <Badge
+                  class="absolute top-2 right-2"
+                  :class="room.status === 'available' ? 'bg-green-500' : 'bg-red-500'"
+                >
+                  {{ room.status === 'available' ? 'Available' : 'Unavailable' }}
+                </Badge>
+              </div>
+
+              <!-- Room Details -->
+              <div class="p-4">
+                <h3 class="font-semibold text-lg">Room: {{ room.number }}</h3>
+                <div class="mt-2 space-y-2">
+                  <div class="flex items-center text-gray-600">
+                    <DollarSign class="h-4 w-4 mr-2" />
+                    <span>{{ room.price }} per night</span>
+                  </div>
+                  <div class="flex items-center text-gray-600">
+                    <Users class="h-4 w-4 mr-2" />
+                    <span>Capacity: {{ room.capacity }} guests</span>
+                  </div>
+                </div>
+
+                <!-- Reservation Button -->
+                <Button
+                  class="w-full mt-4"
+                  :class="room.status !== 'available' ? 'opacity-50 cursor-not-allowed' : ''"
+                  :disabled="room.status !== 'available'"
+                  @click="openReservationDialog(room)"
+                >
+                  Make Reservation
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state when no rooms -->
+          <div v-if="roomsForCurrentFloor.length === 0" class="text-center p-8 bg-gray-50 rounded-lg">
+            <p class="text-gray-500">No rooms available on this floor</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reservation Dialog -->
+    <Dialog :open="reservationDialog" @update:open="reservationDialog = $event">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Make Reservation</DialogTitle>
+          <DialogDescription v-if="selectedRoom">
+            You are about to reserve Room {{ selectedRoom.number }} on Floor {{ selectedRoom.floor.number }}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-4 py-2">
+          <!-- Error message -->
+          <Alert v-if="errorMessage" class="bg-red-50 border-red-500">
+            <AlertTitle class="text-red-700">Error</AlertTitle>
+            <AlertDescription class="text-red-600">{{ errorMessage }}</AlertDescription>
+          </Alert>
+
+          <div class="space-y-2">
+            <label for="accompany_number" class="text-sm font-medium">
+              Number of Guests
+            </label>
+            <Input
+              id="accompany_number"
+              v-model.number="form.accompany_number"
+              type="number"
+              min="1"
+              :max="selectedRoom?.capacity"
+              @input="validateAccompanyNumber"
+            />
+            <p v-if="selectedRoom" class="text-xs text-gray-500">
+              This room has a maximum capacity of {{ selectedRoom.capacity }} guests.
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <label for="check_out_at" class="text-sm font-medium">
+              Check-out Date
+            </label>
+            <Input
+              id="check_out_at"
+              v-model="form.check_out_at"
+              type="date"
+              :min="new Date().toISOString().split('T')[0]"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" @click="reservationDialog = false">
+            Cancel
+          </Button>
+          <Button @click="makeReservation">
+            Confirm Reservation
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
 </template>
+
+<style scoped>
+.swiper {
+  width: 100%;
+}
+</style>
+
+<!-- UPDATE `rooms` SET `status`='available'; -->

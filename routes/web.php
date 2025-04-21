@@ -30,6 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/profile/update', [ClientController::class, 'updateProfile'])->name('profile.update');
             Route::delete('/profile/delete', [ClientController::class, 'deleteProfile'])->name('profile.delete');
             Route::get('/reservations', [ClientController::class, 'getReservations'])->name('reservations.index');
+            Route::get('/floors', [ClientController::class, 'getFloors'])->name('floors.index');
+            Route::get('/floors/{floorId}/rooms', [ClientController::class, 'getRoomsByFloor'])->name('rooms.index');
+            Route::post('/reservations', [ClientController::class, 'makeReservation'])->name('reservations.store');
         });
 });
 
