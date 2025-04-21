@@ -66,6 +66,11 @@ class LoginRequest extends FormRequest
             }
         } else {
             $user = Staff::where('email', $this->email)->first();
+            if ($user->banned_at) {
+                throw ValidationException::withMessages([
+                    'email' => trans('Account Banned'),
+                ]);
+            }
         }
 
         if (! Auth::guard($guard)->attempt($credentials, $remember)) {
@@ -111,6 +116,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

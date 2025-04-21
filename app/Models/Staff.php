@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use Cog\Laravel\Ban\Traits\Bannable;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use Cog\Contracts\Ban\Bannable as BannableContract;
 
-class Staff extends Authenticatable
+class Staff extends Authenticatable implements BannableContract
 {
     //
-    use HasApiTokens, HasRoles;
+    use HasApiTokens, HasRoles, Bannable;
 
     protected $guard_name = 'web';
 
@@ -31,6 +33,4 @@ class Staff extends Authenticatable
         //'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-
-
 }
