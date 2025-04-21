@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Auth;
 class StaffController extends Controller
 {
     use AuthorizesRequests;
-     /**
+    
+    /**
      * Display a listing of the clients.
      */
     public function index()
@@ -24,13 +25,19 @@ class StaffController extends Controller
         
         $staff = Auth::user();
         $clients = [];
+        $canCreate = false;
+        $canDelete = false;
         
-        if ($staff->hasRole(['admin', 'manager'])) {
-            // Managers and admins see all clients
+        if ($staff->hasPermissionTo('view all clients')) {
+            // Admins and managers see all clients
             $clients = Client::with('country')->latest()->get();
-        } elseif ($staff->hasRole('receptionist')) {
-            // Receptionists only see clients that haven't been approved
+            $canCreate = $staff->hasPermissionTo('create clients');
+            $canDelete = $staff->hasPermissionTo('delete clients');
+        } elseif ($staff->hasPermissionTo('view pending clients')) {
+            // Receptionists only see pending clients
             $clients = Client::whereNull('approved_by')->with('country')->latest()->get();
+            $canCreate = false;
+            $canDelete = false;
         }
         
         return Inertia::render('Clients/Index', [
@@ -47,6 +54,11 @@ class StaffController extends Controller
                 ];
             }),
             'userRole' => $staff->roles->pluck('name')[0] ?? null,
+            'canCreate' => $canCreate,
+            'canDelete' => $canDelete,
+            'isReceptionist' => $staff->hasRole('receptionist'),
+            'isAdmin' => $staff->hasRole('admin'),
+            'isManager' => $staff->hasRole('manager'),
         ]);
     }
     
@@ -65,6 +77,8 @@ class StaffController extends Controller
                         ->latest()
                         ->get();
         
+        $canEdit = $staff->hasRole('receptionist');
+        
         return Inertia::render('Clients/ApprovedClients', [
             'clients' => $clients->map(function ($client) {
                 return [
@@ -77,6 +91,8 @@ class StaffController extends Controller
                     'approved_at' => $client->approved_at,
                 ];
             }),
+            'canEdit' => $canEdit,
+            'userRole' => $staff->roles->pluck('name')[0] ?? null,
         ]);
     }
 
@@ -86,6 +102,11 @@ class StaffController extends Controller
     public function approve(Client $client)
     {
         $this->authorize('approveClient', Client::class);
+        
+        // Don't allow approving already approved clients
+        if ($client->approved_by !== null) {
+            return redirect()->back()->with('error', 'Client has already been approved');
+        }
         
         $staff = Auth::user();
         
@@ -157,7 +178,6 @@ class StaffController extends Controller
         $data['password'] = Hash::make($request->input('password'));
 
         // Handle avatar image
-        $imagePath = null;
         if ($request->hasFile('avatar_image')) {
             $imagePath = $request->file('avatar_image')->store('clients', 'public');
             $data['avatar_image'] = $imagePath;

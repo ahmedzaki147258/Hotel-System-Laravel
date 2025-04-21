@@ -18,7 +18,7 @@
             <TableHead>Country</TableHead>
             <TableHead>Gender</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead v-if="shouldShowActions">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -36,10 +36,10 @@
               <Badge v-if="client.approved_by" variant="success">Approved</Badge>
               <Badge v-else variant="secondary">Pending</Badge>
             </TableCell>
-            <TableCell class="space-x-2">
-              <!-- Approve Button (for receptionists and unapproved clients) -->
+            <TableCell v-if="shouldShowActions" class="space-x-2">
+              <!-- Approve Button (for unapproved clients) -->
               <Button 
-                v-if="isReceptionist && !client.approved_by" 
+                v-if="!client.approved_by" 
                 @click="approveClient(client.id)"
                 variant="success"
                 size="sm"
@@ -47,18 +47,9 @@
                 Approve
               </Button>
               
-              <!-- View Button -->
+              <!-- Edit Button (for admin/manager only) -->
               <Button
-                @click="viewClient(client.id)"
-                variant="outline"
-                size="sm"
-              >
-                View
-              </Button>
-              
-              <!-- Edit Button -->
-              <Button
-                v-if="canEdit(client)"
+                v-if="isAdminOrManager"
                 @click="editClient(client.id)"
                 variant="secondary"
                 size="sm"
@@ -66,7 +57,7 @@
                 Edit
               </Button>
               
-              <!-- Delete Button -->
+              <!-- Delete Button (for admin/manager only) -->
               <Button
                 v-if="canDelete"
                 @click="openDeleteModal(client.id)"
@@ -80,7 +71,7 @@
           
           <!-- No clients message -->
           <TableRow v-if="clients.length === 0">
-            <TableCell colspan="7" class="text-center py-8">
+            <TableCell :colspan="shouldShowActions ? 7 : 6" class="text-center py-8">
               No clients found
             </TableCell>
           </TableRow>
@@ -108,8 +99,6 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
-import { usePage } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 
 // Import shadcn-vue components
@@ -138,6 +127,26 @@ import { Badge } from '@/components/ui/badge';
 const props = defineProps({
   clients: Array,
   userRole: String,
+  canCreate: {
+    type: Boolean,
+    default: false
+  },
+  canDelete: {
+    type: Boolean,
+    default: false
+  },
+  isReceptionist: {
+    type: Boolean,
+    default: false
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
+  isManager: {
+    type: Boolean,
+    default: false
+  }
 });
 
 // State
@@ -145,13 +154,11 @@ const isModalOpen = ref(false);
 const clientToDelete = ref(null);
 
 // Computed properties
-const isManager = computed(() => props.userRole === 'manager' || props.userRole === 'admin');
-const isReceptionist = computed(() => props.userRole === 'receptionist');
-const canCreate = computed(() => true); // Everyone can create clients as per policy
-const canDelete = computed(() => isManager.value);
+const isAdminOrManager = computed(() => props.isAdmin || props.isManager);
+const shouldShowActions = computed(() => isAdminOrManager.value || props.isReceptionist);
 
 const pageTitle = computed(() => {
-  if (isReceptionist.value) {
+  if (props.isReceptionist) {
     return 'Pending Clients';
   } else {
     return 'Manage Clients';
@@ -163,28 +170,12 @@ function goToCreateClient() {
   router.visit(route('clients.create'));
 }
 
-function viewClient(clientId) {
-  router.get(route('clients.show', { client: clientId }));
-}
-
 function editClient(clientId) {
   router.get(route('clients.edit', { client: clientId }));
 }
 
 function approveClient(clientId) {
   router.post(route('clients.approve', { client: clientId }));
-}
-
-function canEdit(client) {
-  if (isManager.value) {
-    return true;
-  }
-  
-  if (isReceptionist.value && client.approved_by) {
-    return true;
-  }
-  
-  return false;
 }
 
 function openDeleteModal(clientId) {
@@ -198,7 +189,9 @@ function closeModal() {
 }
 
 function confirmDelete() {
-  router.delete(route('clients.destroy', clientToDelete.value));
+  if (clientToDelete.value) {
+    router.delete(route('clients.destroy', clientToDelete.value));
+  }
   closeModal();
 }
 </script>
