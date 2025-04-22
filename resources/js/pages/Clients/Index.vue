@@ -95,17 +95,21 @@ function openDeleteModal(clientId) {
 }
 
 function closeModal() {
-  clientToDelete.value = null;
   isModalOpen.value = false;
 }
 
 function confirmDelete() {
-  console.log('Confirming delete for client:', clientToDelete.value);
   if (clientToDelete.value) {
-    console.log('Delete URL:', route('clients.destroy', { client: clientToDelete.value }));
-    router.delete(route('clients.destroy', { client: clientToDelete.value }));
+    router.delete(route('clients.destroy', { client: clientToDelete.value }), {
+      onSuccess: () => {
+        isModalOpen.value = false;
+        clientToDelete.value = null;
+      },
+      onError: () => {
+        console.error('Failed to delete client');
+      },
+    });
   }
-  closeModal();
 }
 </script>
 
@@ -196,7 +200,7 @@ function confirmDelete() {
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <AlertDialog :open="isModalOpen" @update:open="closeModal">
+        <AlertDialog :open="isModalOpen">
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Client</AlertDialogTitle>
