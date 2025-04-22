@@ -132,8 +132,8 @@ function confirmDelete() {
             
   
           <!-- Delete Modal -->
-          <AlertDialog :open="isModalOpen" @update:open="closeModal">
-          <AlertDialogContent>
+          <AlertDialog v-model:open="isModalOpen">
+            <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Floor</AlertDialogTitle>
               <AlertDialogDescription>

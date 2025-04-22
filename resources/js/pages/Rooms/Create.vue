@@ -15,7 +15,7 @@ const props = defineProps({
 const form = reactive({
   capacity: 0,
   price: 0,
-  floor_number: null,
+  floor_id: null,
         manager_id: props.managerId,
 
 });
@@ -81,12 +81,12 @@ function createRoom() {
           <label for="floor_id" class="block text-sm font-medium text-black">Floor</label>
           <select
             id="floor_id"
-            v-model="form.floor_number"
+            v-model="form.floor_id"
             required
             class="w-full px-4 py-2 border text-black rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="" disabled>Select a floor</option>
-            <option v-for="floor in props.floors" :key="floor.id" :value="floor.number">{{ floor.name }}</option>
+            <option v-for="floor in props.floors" :key="floor.id" :value="floor.id">{{ floor.name }}</option>
           </select>
         </div>
   

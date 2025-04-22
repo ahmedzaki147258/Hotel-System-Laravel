@@ -73,12 +73,14 @@ function openDeleteModal(roomId) {
 }
 
 function closeModal() {
+  console.log(`Closing modal for room ID: ${roomToDelete.value}`);
   isModalOpen.value = false
   roomToDelete.value = null
 }
 
 function confirmDelete() {
   if (roomToDelete.value) {
+    console.log(`Deleting room with ID: ${roomToDelete.value}`);
     router.delete(route('rooms.destroy', roomToDelete.value))
   }
   closeModal()
@@ -106,7 +108,7 @@ function confirmDelete() {
                         <TableHead>Number</TableHead>
                         <TableHead>Capacity</TableHead>
                         <TableHead>Price</TableHead>
-                        <TableHead>Floor Number</TableHead>
+                        <TableHead>Floor Name</TableHead>
 
                         <TableHead v-if="isAdmin">Manager Name</TableHead>
                         <TableHead>Actions</TableHead>
@@ -116,7 +118,9 @@ function confirmDelete() {
                     <TableRow v-for="(room, index) in rooms" :key="room.id">
                         <TableCell>{{ room.number }}</TableCell>
                         <TableCell>{{ room.capacity }}</TableCell>
-                        <TableCell>{{ room.price }}</TableCell>
+                        <TableCell>${{ (room.price / 100).toFixed(2) }}</TableCell>
+                        <TableCell>{{ room.floor_name }}</TableCell>
+
 
                         <TableCell v-if="isAdmin">{{ room.manager_name }}</TableCell>
                         <TableCell v-if="currentId ==  room.manager_id || isAdmin" class="space-x-2">
@@ -137,8 +141,8 @@ function confirmDelete() {
             
   
           <!-- Delete Modal -->
-          <AlertDialog :open="isModalOpen" @update:open="closeModal">
-          <AlertDialogContent>
+          <AlertDialog v-model:open="isModalOpen">
+            <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Room</AlertDialogTitle>
               <AlertDialogDescription>
