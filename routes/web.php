@@ -2,6 +2,8 @@
 
 use App\Helpers\CountryHelper;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\FloorController;
+use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\ClientManagementController;
@@ -67,5 +69,15 @@ Route::middleware(['auth'])->group(function () {
 
 //Route::post('/receptionists', [ReceptionistController::class, 'store'])->name('receptionists.store');
 
+
+// Route resource for floors
+Route::middleware(['auth'])->group(function () {
+    Route::resource('floors', FloorController::class);
+});
+
+// Route resource for rooms
+Route::middleware(['auth'])->group(function () {
+    Route::resource('rooms', RoomController::class);
+});
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
