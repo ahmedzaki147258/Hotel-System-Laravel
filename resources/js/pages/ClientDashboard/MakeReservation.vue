@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import 'swiper/css';
 import { ref, onMounted, reactive, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -28,15 +27,6 @@ const form = reactive({
   accompany_number: 1,
   check_out_at: '',
 });
-
-// Configure axios to use CSRF token
-axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-const token = document.head.querySelector('meta[name="csrf-token"]');
-if (token) {
-  axios.defaults.headers.common['X-CSRF-TOKEN'] = token.getAttribute('content') || '';
-} else {
-  console.error('CSRF token not found');
-}
 
 onMounted(async () => {
   try {
@@ -124,8 +114,8 @@ const makeReservation = async () => {
     loadingMessage.value = 'Redirecting to payment...';
 
     // After successful form submission, request the Stripe payment URL
-    const response = await axios.get('/reservation/payment');
-    const data = response.data;
+    const response = await fetch('/reservation/payment');
+    const data = await response.json();
 
     loading.value = false;
 
