@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\ClientManagementController;
 use App\Http\Controllers\ReceptionistController;
+use App\Http\Controllers\ManagerController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -41,16 +42,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 Route::middleware(['auth'])->group(function () {
-    
     // Client management routes
     Route::resource('clients', ClientManagementController::class);
     Route::get('/my-approved-clients', [ClientManagementController::class, 'myApprovedClients'])->name('clients.approved');
     Route::post('/clients/{client}/approve', [ClientManagementController::class, 'approve'])->name('clients.approve');
 
-    //receptionists
+    // Receptionists management routes
     Route::resource('receptionists', ReceptionistController::class);
     Route::post('/receptionists/{receptionist}/ban', [ReceptionistController::class, 'ban'])->name('receptionists.ban');
     Route::post('/receptionists/{receptionist}/unban', [ReceptionistController::class, 'unban'])->name('receptionists.unban');
+
+    // Managers management routes
+    Route::resource('managers', ManagerController::class);
+    Route::post('/managers/{manager}/ban', [ManagerController::class, 'ban'])->name('managers.ban');
+    Route::post('/managers/{manager}/unban', [ManagerController::class, 'unban'])->name('managers.unban');
 });
 
 
@@ -79,5 +84,6 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::resource('rooms', RoomController::class);
 });
+
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
