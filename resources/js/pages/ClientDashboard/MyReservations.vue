@@ -29,6 +29,10 @@ const totalPages = ref(1);
 
 const columns = [
     {
+        accessorKey: 'id',
+        header: '#ID',
+    },
+    {
         accessorKey: 'room.floor.number',
         header: 'Floor',
     },

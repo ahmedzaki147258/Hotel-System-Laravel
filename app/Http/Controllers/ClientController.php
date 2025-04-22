@@ -8,7 +8,7 @@ use App\Http\Resources\RoomResource;
 use App\Models\Floor;
 use App\Models\Reservation;
 use App\Models\Room;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -109,31 +109,67 @@ class ClientController extends Controller
     {
         $request->validate([
             'room_id' => 'required|exists:rooms,id',
-            'payment_id' => 'required|string',
             'accompany_number' => 'required|integer|min:1',
             'check_out_at' => 'required|date|after:now',
         ]);
 
         $room = Room::find($request->room_id);
         if ($room->status !== 'available') {
-            return back()->with('error', 'Room is not available');
+            return response()->json(['message' => 'Room is not available'], 400);
         }
         if ($room->capacity < $request->accompany_number) {
-            return back()->with('error', 'Room capacity is not enough');
+            return response()->json(['message' => 'Room capacity is not enough'], 400);
         }
 
         $checkOut = Carbon::parse($request->check_out_at);
         $days = now()->startOfDay()->diffInDays($checkOut->startOfDay());
+        $totalPrice = $room->price * max(1, $days);
+        session([
+            'reservation_details' => [
+                'room_id' => $request->room_id,
+                'roomNumber' => $room->number,
+                'accompany_number' => $request->accompany_number,
+                'check_out_at' => $request->check_out_at,
+                'price' => $totalPrice,
+                'days' => max(1, $days)
+            ]
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Reservation details saved. Redirecting to payment.'
+        ]);
+    }
+
+    public function storeReservation(Request $request)
+    {
+        if (!session()->has('reservation_details')) {
+            return redirect()->route('dashboard')->with('error', 'Invalid reservation data');
+        }
+
+        $details = session('reservation_details');
+        $room = Room::find($details['room_id']);
+        if ($room->status !== 'available') {
+            return redirect()->route('dashboard')->with('error', 'Room is no longer available');
+        }
+
+        $paymentId = $request->query('payment_id');
+        if (empty($paymentId)) {
+            return redirect()->route('dashboard')->with('error', 'Payment information missing');
+        }
+
+        $checkOutDate = Carbon::parse($details['check_out_at'])->format('Y-m-d H:i:s');
         Reservation::create([
             'client_id' => $request->user()->id,
-            'room_id' => $request->room_id,
-            'payment_id' => $request->payment_id,
-            'accompany_number' => $request->accompany_number,
-            'paid_price_in_cents' => $room->price * max(1, $days),
-            'check_out_at' => $request->check_out_at,
+            'room_id' => $details['room_id'],
+            'payment_id' => (string) $paymentId,
+            'accompany_number' => $details['accompany_number'],
+            'paid_price_in_cents' => $details['price'],
+            'check_out_at' => $checkOutDate,
         ]);
 
         $room->update(['status' => 'unavailable']);
-        return back()->with('success', 'Reservation created successfully');
+        session()->forget('reservation_details');
+        return redirect()->route('client.dashboard')->with('success', 'Reservation completed successfully');
     }
 }

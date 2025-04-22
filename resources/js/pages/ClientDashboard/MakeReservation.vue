@@ -2,6 +2,7 @@
 import 'swiper/css';
 import { ref, onMounted, reactive, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
+import axios from 'axios';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -20,13 +21,22 @@ const selectedRoom = ref<Room | null>(null);
 const accompanyNumber = ref(1);
 const errorMessage = ref('');
 const successMessage = ref('');
+const loadingMessage = ref('');
 
 const form = reactive({
   room_id: '',
   accompany_number: 1,
   check_out_at: '',
-  payment_id: 'placeholder-payment-id' // In a real app, this would come from a payment gateway
 });
+
+// Configure axios to use CSRF token
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+const token = document.head.querySelector('meta[name="csrf-token"]');
+if (token) {
+  axios.defaults.headers.common['X-CSRF-TOKEN'] = token.getAttribute('content') || '';
+} else {
+  console.error('CSRF token not found');
+}
 
 onMounted(async () => {
   try {
@@ -97,25 +107,40 @@ const makeReservation = async () => {
   if (!validateAccompanyNumber()) return;
 
   try {
-    router.post('/client/reservations', form, {
-        forceFormData: true,
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: async () => {
-            successMessage.value = 'Reservation created successfully!';
-            reservationDialog.value = false;
-        },
-        onError: (errors) => {
-            errorMessage.value = errors.message;
-        }
+    // Close the dialog and show loading state
+    reservationDialog.value = false;
+    loading.value = true;
+    loadingMessage.value = 'Processing reservation...';
+    errorMessage.value = '';
+
+    // Using axios which automatically handles CSRF tokens
+    const reservationResponse = await axios.post('/client/reservations', {
+      room_id: form.room_id,
+      accompany_number: form.accompany_number,
+      check_out_at: form.check_out_at
     });
 
-    await loadRooms(currentFloorId.value ?? 0);
-    setTimeout(() => {
-      successMessage.value = '';
-    }, 3000);
+
+    loadingMessage.value = 'Redirecting to payment...';
+
+    // After successful form submission, request the Stripe payment URL
+    const response = await axios.get('/reservation/payment');
+    const data = response.data;
+
+    loading.value = false;
+
+    if (data.url) {
+      // Direct browser navigation to Stripe checkout
+      window.location.href = data.url;
+    } else if (data.error) {
+      errorMessage.value = data.error;
+      reservationDialog.value = true;
+    }
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to create reservation.';
+    loading.value = false;
+    errorMessage.value = error.response?.data?.message || 'An unexpected error occurred';
+    reservationDialog.value = true;
+    console.error(error);
   }
 };
 
@@ -138,9 +163,10 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
       <AlertDescription class="text-green-600">{{ successMessage }}</AlertDescription>
     </Alert>
 
-    <!-- Loading state -->
-    <div v-if="loading" class="flex items-center justify-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    <!-- Loading state for initial fetch -->
+    <div v-if="loading" class="flex flex-col items-center justify-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+      <p class="text-gray-600">{{ loadingMessage || 'Loading...' }}</p>
     </div>
 
     <div v-else-if="floors.length === 0" class="text-center p-8">
@@ -305,5 +331,3 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
   width: 100%;
 }
 </style>
-
-<!-- UPDATE `rooms` SET `status`='available'; -->

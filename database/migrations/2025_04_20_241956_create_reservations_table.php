@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedInteger('accompany_number');
             $table->unsignedBigInteger('paid_price_in_cents');
             $table->string('payment_id');
-            $table->timestamp('check_out_at');
+            $table->string('check_out_at');
             $table->timestamps();
         });
     }

@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\ClientManagementController;
 use App\Http\Controllers\ReceptionistController;
 use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\StripeController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -38,6 +39,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/floors/{floorId}/rooms', [ClientController::class, 'getRoomsByFloor'])->name('rooms.index');
             Route::post('/reservations', [ClientController::class, 'makeReservation'])->name('reservations.store');
         });
+});
+
+// payment routes
+Route::middleware(['auth:sanctum', 'auth:client'])->group(function (){
+    Route::get('/reservation/payment', [StripeController::class, 'reservationPayment'])->name('stripe.reservation.payment');
+    Route::get('/reservation/success', [StripeController::class, 'reservationSuccess'])->name('stripe.reservation.success');
+    Route::get('/client/store-reservation', [ClientController::class, 'storeReservation'])->middleware(['auth:sanctum', 'auth:client'])->name('client.store.reservation');
 });
 
 
