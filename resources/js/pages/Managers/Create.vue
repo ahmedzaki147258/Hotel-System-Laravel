@@ -36,6 +36,18 @@
               </div>
 
               <div class="space-y-2">
+                <Label for="name">National ID</Label>
+                <Input
+                  id="national_id"
+                  v-model="form.national_id"
+                  type="text"
+                  placeholder="Enter manager national ID"
+                  :disabled="form.processing"
+                  required
+                />
+              </div>
+
+              <div class="space-y-2">
                 <Label for="password">Password</Label>
                 <Input
                   id="password"
@@ -45,6 +57,20 @@
                   :disabled="form.processing"
                   required
                 />
+              </div>
+
+              <div class="space-y-2">
+                <Label for="avatar_image">Profile Image</Label>
+                <Input
+                  id="avatar_image"
+                  type="file"
+                  accept="image/*"
+                  @change="handleImageUpload"
+                  :disabled="form.processing"
+                />
+                <p class="text-sm text-muted-foreground">
+                  Accepted formats: JPG, PNG, JPEG. Max size: 2MB
+                </p>
               </div>
             </div>
 
@@ -84,6 +110,8 @@ const form = useForm({
   name: '',
   email: '',
   password: '',
+  national_id: '',
+  avatar_image: null,
 });
 
 // Breadcrumbs
@@ -100,5 +128,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const submit = () => {
   form.post(route('managers.store'));
+};
+
+const handleImageUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    form.avatar_image = file;
+  }
 };
 </script> 

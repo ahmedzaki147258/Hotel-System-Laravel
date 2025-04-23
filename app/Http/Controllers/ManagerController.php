@@ -67,17 +67,23 @@ class ManagerController extends Controller
         }
 
         $data = $validator->validated();
-
         $data['password'] = Hash::make($data['password']);
 
         if ($request->hasFile('avatar_image')) {
             $data['avatar_image'] = $request->file('avatar_image')->store('managers', 'public');
         } else {
-            $data['avatar_image'] = 'managers/default-avatar.jpg';
-
-            if (!Storage::disk('public')->exists($data['avatar_image'])) {
+            $data['avatar_image'] = 'managers/default-avatar.png';
+            
+            // Ensure default avatar exists
+            if (!Storage::disk('public')->exists('managers/default-avatar.png')) {
+                // Create managers directory if it doesn't exist
+                if (!Storage::disk('public')->exists('managers')) {
+                    Storage::disk('public')->makeDirectory('managers');
+                }
+                
+                // Copy default avatar from public path to storage
                 Storage::disk('public')->put(
-                    $data['avatar_image'],
+                    'managers/default-avatar.png',
                     file_get_contents(public_path('images/default-avatar.jpg'))
                 );
             }
@@ -98,7 +104,7 @@ class ManagerController extends Controller
                 'name' => $manager->name,
                 'email' => $manager->email,
                 'national_id' => $manager->national_id,
-                'avatar' => $manager->avatar_image ? Storage::url($manager->avatar_image) : asset('managers/default-avatar.png'),
+                'avatar' => $manager->avatar_image ? Storage::url($manager->avatar_image) : Storage::url('managers/default-avatar.png'),
             ]
         ]);
     }
@@ -128,7 +134,7 @@ class ManagerController extends Controller
             unset($data['password']);
         }
 
-        if ($request['avatar_image']) {
+        if ($request->hasFile('avatar_image')) {
             if (
                 $manager->avatar_image &&
                 $manager->avatar_image !== 'managers/default-avatar.jpg' &&
@@ -149,7 +155,7 @@ class ManagerController extends Controller
     {
         if (
             $manager->avatar_image &&
-            $manager->avatar_image !== 'managers/default-avatar.jpg' &&
+            $manager->avatar_image !== 'managers/default-avatar.png' &&
             Storage::disk('public')->exists($manager->avatar_image)
         ) {
             Storage::disk('public')->delete($manager->avatar_image);
