@@ -7,6 +7,8 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid, Users, UserCog, User, CheckCircle, Building , Bed } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+import { CalendarCheck, ShieldCheck, ConciergeBell} from 'lucide-vue-next';
+
 
 const mainNavItems: NavItem[] = [
     {
@@ -16,13 +18,13 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Manage Managers',
-        href: '/managers', // You may need to update this based on your actual route
-        icon: UserCog,
+        href: '/managers', 
+        icon: ShieldCheck,
     },
     {
         title: 'Manage Receptionists',
-        href: '/receptionists', // You may need to update this based on your actual route
-        icon: UserCog,
+        href: '/receptionists', 
+        icon: ConciergeBell,
     },
     {
         title: 'Manage Clients',
@@ -33,6 +35,11 @@ const mainNavItems: NavItem[] = [
         title: 'My Approved Clients',
         href: '/my-approved-clients',
         icon: CheckCircle,
+    },
+    {
+        title: 'Clients Reservations',
+        href: '/client-reservations', 
+        icon: CalendarCheck,
     },
     {
         title: 'Manage Floors',
