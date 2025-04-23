@@ -131,6 +131,9 @@ class RoomController extends Controller
     public function destroy(string $id)
     {
        $room = Room::findOrFail($id);
+       if($room->status == 'unavailable') {
+            return redirect()->route('rooms.index')->with('error', 'Room cannot be deleted while unavailable.');
+        }
         $room->delete();
         return redirect()->route('rooms.index')->with('success', 'Room deleted successfully.');
     }

@@ -16,6 +16,11 @@ class FloorController extends Controller
     {      
         $floors = Floor::all();
          $currentStaff = Staff::find(auth()->id());
+        // check if the floor has any associated rooms
+        $floors = $floors->map(function ($floor) {
+            $floor->room_count = $floor->rooms()->count();
+            return $floor;
+        });
         // Check if the user has the 'manager' or 'admin' role
         if ($currentStaff->hasRole('admin')) {
             // Perform some transformations or mapping for admins
@@ -108,6 +113,10 @@ class FloorController extends Controller
     public function destroy(string $id)
     {
         $floor = Floor::findOrFail($id);
+        // Check if the floor has any associated rooms
+        if ($floor->rooms()->exists()) {
+            return redirect()->route('floors.index')->with('error', 'Cannot delete floor with associated rooms.');
+        }
         $floor->delete();
 
         return redirect()->route('floors.index')->with('success', 'Floor deleted successfully.');

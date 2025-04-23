@@ -64,6 +64,7 @@ function goToCreate() {
 }
 
 function editFloor(floorId) {
+  
   router.get(route('floors.edit', { floor: floorId }))
 }
 
@@ -116,7 +117,18 @@ function confirmDelete() {
                         <TableCell v-if="isAdmin">{{ floor.manager_name }}</TableCell>
                         <TableCell v-if="currentId ==  floor.manager_id || isAdmin" class="space-x-2">
                             <Button @click="editFloor(floor.id)" size="sm" variant="secondary">Edit</Button>
-                            <Button @click="openDeleteModal(floor.id)" size="sm" variant="destructive">Delete</Button>
+                            <div class="relative group inline-block">
+                    <Button :disabled="floor.room_count != 0" @click="openDeleteModal(floor.id)" size="sm"
+                      variant="destructive">
+                      Delete
+                    </Button>
+
+                    <!-- Tooltip -->
+                    <div v-if="floor.room_count != 0"
+                      class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-700 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                      Floor cannot be deleted because it has rooms assigned to it.
+                    </div>
+                  </div>
                         </TableCell>
                         <TableCell v-else class="space-x-2">
                             <Badge variant="destructive">Not Allowed</Badge>
