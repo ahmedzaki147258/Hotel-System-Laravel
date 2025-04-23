@@ -10,6 +10,7 @@ use App\Http\Controllers\ClientManagementController;
 use App\Http\Controllers\ReceptionistController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\StripeController;
+use App\Http\Controllers\ReservationController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -91,6 +92,11 @@ Route::middleware(['auth'])->group(function () {
 // Route resource for rooms
 Route::middleware(['auth'])->group(function () {
     Route::resource('rooms', RoomController::class);
+});
+
+// Reservation routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
 });
 
 require __DIR__ . '/settings.php';

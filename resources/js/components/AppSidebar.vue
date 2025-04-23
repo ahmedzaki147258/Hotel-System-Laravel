@@ -38,7 +38,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Clients Reservations',
-        href: '/client-reservations', 
+        href: '/reservations', 
         icon: CalendarCheck,
     },
     {
