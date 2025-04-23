@@ -88,14 +88,14 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FlexRender } from '@tanstack/vue-table';
-import { Receptionist,ReceptionistResponse } from '@/interfaces/model.interface';
+import { Receptionist, ReceptionistResponse } from '@/interfaces/model.interface';
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -117,6 +117,9 @@ interface ReceptionistResponse {
   last_page: number;
   prev_page_url: string | null;
   next_page_url: string | null;
+  from: number;
+  to: number;
+  total: number;
 }
 
 const props = defineProps<{
@@ -124,6 +127,8 @@ const props = defineProps<{
 }>();
 
 const pageTitle = ref('Receptionists');
+const isModalOpen = ref(false);
+const receptionistToDelete = ref<number | null>(null);
 
 const columnHelper = createColumnHelper<Receptionist>();
 
@@ -142,10 +147,20 @@ const columns = computed<ColumnDef<Receptionist>[]>(() => [
   }),
 ]);
 
-const table = useVueTable({
-  data: props.receptionists.data,
-  columns: columns.value,
-  getCoreRowModel: getCoreRowModel(),
+const table = ref(
+  useVueTable({
+    data: props.receptionists.data,
+    columns: columns.value,
+    getCoreRowModel: getCoreRowModel(),
+  })
+);
+
+watch(() => props.receptionists.data, (newData) => {
+  table.value = useVueTable({
+    data: newData,
+    columns: columns.value,
+    getCoreRowModel: getCoreRowModel(),
+  });
 });
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -154,9 +169,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     href: '/receptionists',
   }
 ];
-
-const isModalOpen = ref(false);
-const receptionistToDelete = ref<number | null>(null);
 
 const goToCreateReceptionist = () => {
   router.visit(route('receptionists.create'));
@@ -193,9 +205,9 @@ const toggleBan = (id: number, isBanned: boolean) => {
 };
 
 const changePage = (page: number) => {
-  router.visit(route('receptionists.index', { page }), {
+  router.get(route('receptionists.index', { page }), {
     preserveScroll: true,
-    preserveState: true,
+    only: ['receptionists'],
   });
 };
 </script>

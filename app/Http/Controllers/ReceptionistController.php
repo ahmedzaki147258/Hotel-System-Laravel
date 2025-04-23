@@ -21,33 +21,36 @@ class ReceptionistController extends Controller
 
     public function index(Request $request)
     {
-        $limit = $request->limit ?? 5;
-        $page = $request->page ?? 1;
+        $receptionists = Staff::role('receptionist')->paginate($request->input('per_page', 1));
 
-        $receptionists = Staff::role('receptionist')
-            ->paginate($limit, ['*'], 'page', $page);
+        // Transform the data using map()
+        $transformedData = $receptionists->getCollection()->map(function ($receptionist) {
+            return [
+                'id' => $receptionist->id,
+                'name' => $receptionist->name,
+                'email' => $receptionist->email,
+                'national_id' => $receptionist->national_id,
+                'avatar' => $receptionist->avatar_image
+                    ? Storage::url($receptionist->avatar_image)
+                    : Storage::url('receptionists/default-avatar.png'),
+                'is_banned' => $receptionist->isBanned(),
+                'created_at' => $receptionist->created_at
+            ];
+        });
+
+        // Create new paginator with transformed data
+        $receptionists = new \Illuminate\Pagination\LengthAwarePaginator(
+            $transformedData,
+            $receptionists->total(),
+            $receptionists->perPage(),
+            $receptionists->currentPage(),
+            ['path' => $request->url()]
+        );
 
         return Inertia::render('Receptionists/Index', [
-            'receptionists' => $receptionists->through(function ($receptionist) {
-                return [
-                    'id' => $receptionist->id,
-                    'name' => $receptionist->name,
-                    'email' => $receptionist->email,
-                    'national_id' => $receptionist->national_id,
-                    'avatar' => $receptionist->avatar_image ? Storage::url($receptionist->avatar_image) : Storage::url('receptionists/default-avatar.png'),
-                    'is_banned' => $receptionist->isBanned(),
-                    'created_at' => $receptionist->created_at
-                ];
-            }),
-            'pagination' => [
-                'current_page' => $receptionists->currentPage(),
-                'last_page' => $receptionists->lastPage(),
-                'per_page' => $receptionists->perPage(),
-                'total' => $receptionists->total(),
-            ],
+            'receptionists' => $receptionists
         ]);
     }
-
     /**
      * Show the form for creating a new receptionist.
      */
