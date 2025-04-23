@@ -33,7 +33,7 @@ class Client extends Authenticatable
     ];
 
     public function approvedBy(): BelongsTo {
-        return $this->belongsTo(User::class, 'approved_by', 'id');
+        return $this->belongsTo(Staff::class, 'approved_by', 'id');
     }
 
     public function country(): BelongsTo {
