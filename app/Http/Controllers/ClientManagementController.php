@@ -18,27 +18,35 @@ class ClientManagementController extends Controller
     /**
      * Display a listing of the clients.
      */
-    public function index()
+    public function index(Request $request)
     {
         // Authorize the user to view clients
         $this->authorize('viewAny', Client::class);
 
         $staff = Auth::user();
-        $clients = [];
+        $pageSize = $request->input('pageSize', 5);
+        $pageIndex = $request->input('pageIndex', 0);
         $canCreate = false;
         $canDelete = false;
 
+        $query = null;
+
         if ($staff->hasPermissionTo('view all clients')) {
             // Admins and managers see all clients
-            $clients = Client::with('country')->latest()->get();
+            $query = Client::with('country')->latest();
             $canCreate = $staff->hasPermissionTo('create clients');
             $canDelete = $staff->hasPermissionTo('delete clients');
         } elseif ($staff->hasPermissionTo('view pending clients')) {
             // Receptionists only see pending clients
-            $clients = Client::whereNull('approved_by')->with('country')->latest()->get();
+            $query = Client::whereNull('approved_by')->with('country')->latest();
             $canCreate = false;
             $canDelete = false;
         }
+
+        $total = $query->count();
+        $clients = $query->skip($pageIndex * $pageSize)
+            ->take($pageSize)
+            ->get();
 
         return Inertia::render('Clients/Index', [
             'clients' => $clients->map(function ($client) {
@@ -53,6 +61,12 @@ class ClientManagementController extends Controller
                     'approved_at' => $client->approved_at,
                 ];
             }),
+            'pagination' => [
+                'pageIndex' => $pageIndex,
+                'pageSize' => $pageSize,
+                'pageCount' => ceil($total / $pageSize),
+                'rowCount' => $total,
+            ],
             'userRole' => $staff->roles->pluck('name')[0] ?? null,
             'canCreate' => $canCreate,
             'canDelete' => $canDelete,
@@ -65,16 +79,23 @@ class ClientManagementController extends Controller
     /**
      * Display the approved clients.
      */
-    public function myApprovedClients()
+    public function myApprovedClients(Request $request)
     {
         $staff = Auth::user();
 
         // Check if user has permission to view own approved clients
         $this->authorize('viewOwnApprovedClients', Client::class);
 
-        $clients = Client::where('approved_by', $staff->id)
+        $pageSize = $request->input('pageSize', 5);
+        $pageIndex = $request->input('pageIndex', 0);
+
+        $query = Client::where('approved_by', $staff->id)
             ->with('country')
-            ->latest()
+            ->latest();
+
+        $total = $query->count();
+        $clients = $query->skip($pageIndex * $pageSize)
+            ->take($pageSize)
             ->get();
 
         $canEdit = $staff->hasRole('receptionist');
@@ -91,6 +112,12 @@ class ClientManagementController extends Controller
                     'approved_at' => $client->approved_at,
                 ];
             }),
+            'pagination' => [
+                'pageIndex' => $pageIndex,
+                'pageSize' => $pageSize,
+                'pageCount' => ceil($total / $pageSize),
+                'rowCount' => $total,
+            ],
             'canEdit' => $canEdit,
             'userRole' => $staff->roles->pluck('name')[0] ?? null,
         ]);
