@@ -24,7 +24,7 @@ class ClientManagementController extends Controller
         $this->authorize('viewAny', Client::class);
 
         $staff = Auth::user();
-        $pageSize = $request->input('pageSize', 5);
+        $pageSize = 5;
         $pageIndex = $request->input('pageIndex', 0);
         $canCreate = false;
         $canDelete = false;
@@ -86,7 +86,7 @@ class ClientManagementController extends Controller
         // Check if user has permission to view own approved clients
         $this->authorize('viewOwnApprovedClients', Client::class);
 
-        $pageSize = $request->input('pageSize', 5);
+        $pageSize = 5; 
         $pageIndex = $request->input('pageIndex', 0);
 
         $query = Client::where('approved_by', $staff->id)

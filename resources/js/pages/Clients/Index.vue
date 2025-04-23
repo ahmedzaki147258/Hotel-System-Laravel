@@ -2,11 +2,10 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { 
   createTable,
   getCoreRowModel,
-  getPaginationRowModel,
   PaginationState,
 } from '@tanstack/vue-table';
 
@@ -31,13 +30,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 // Props
 const props = defineProps({
@@ -71,7 +63,7 @@ const isModalOpen = ref(false);
 const clientToDelete = ref(null);
 const pagination = ref<PaginationState>({
   pageIndex: props.pagination?.pageIndex || 0,
-  pageSize: props.pagination?.pageSize || 10,
+  pageSize: props.pagination?.pageSize || 5, 
 });
 
 // Column definitions
@@ -193,7 +185,7 @@ function confirmDelete() {
   }
 }
 
-// Handle page changes
+// Pagination actions
 function goToFirstPage() {
   table.setPageIndex(0);
 }
@@ -208,10 +200,6 @@ function goToNextPage() {
 
 function goToLastPage() {
   table.setPageIndex(table.getPageCount() - 1);
-}
-
-function updatePageSize(size) {
-  table.setPageSize(parseInt(size));
 }
 </script>
 

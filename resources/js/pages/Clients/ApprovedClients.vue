@@ -6,7 +6,6 @@ import { ref } from 'vue';
 import { 
   createTable,
   getCoreRowModel,
-  getPaginationRowModel,
   PaginationState,
 } from '@tanstack/vue-table';
 
@@ -20,13 +19,6 @@ import {
   TableCell 
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 // Props
 const props = defineProps({
@@ -42,7 +34,7 @@ const props = defineProps({
 // Pagination state
 const pagination = ref<PaginationState>({
   pageIndex: props.pagination?.pageIndex || 0,
-  pageSize: props.pagination?.pageSize || 10,
+  pageSize: props.pagination?.pageSize || 5, 
 });
 
 // Column definitions
@@ -107,7 +99,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Methods
 function fetchData() {
-  router.get(route('my-approved-clients'), {
+  router.get(route('clients.approved'), {
     pageIndex: pagination.value.pageIndex,
     pageSize: pagination.value.pageSize,
   }, {
@@ -144,10 +136,6 @@ function goToNextPage() {
 
 function goToLastPage() {
   table.setPageIndex(table.getPageCount() - 1);
-}
-
-function updatePageSize(size) {
-  table.setPageSize(parseInt(size));
 }
 </script>
 
@@ -196,8 +184,8 @@ function updatePageSize(size) {
           </Table>
         </div>
         
-        <!-- Pagination Controls -->
-        <div class="flex items-center justify-end"> 
+        <!-- Pagination Controls-->
+        <div class="flex items-center justify-end">
           <div class="flex items-center gap-1">
             <span class="text-sm text-gray-600 mr-2">
               Page {{ pagination.pageIndex + 1 }} of {{ props.pagination?.pageCount || 1 }}
