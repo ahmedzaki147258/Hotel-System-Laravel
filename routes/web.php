@@ -4,7 +4,7 @@ use App\Helpers\CountryHelper;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\FloorController;
 use App\Http\Controllers\RoomController;
-use App\Http\Middleware\EnsureUserIsAdminOrManager;
+use App\Http\Middleware\IsAdminOrManager;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\ClientManagementController;
@@ -86,7 +86,7 @@ Route::middleware(['auth'])->group(function () {
 //Route::post('/receptionists', [ReceptionistController::class, 'store'])->name('receptionists.store');
 
 
-Route::middleware(['auth', EnsureUserIsAdminOrManager::class])->group(function () {
+Route::middleware(['auth', IsAdminOrManager::class])->group(function () {
     Route::resource('floors', FloorController::class);
     Route::resource('rooms', RoomController::class);
 });
