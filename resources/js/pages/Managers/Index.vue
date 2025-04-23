@@ -13,10 +13,12 @@
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>National ID</TableHead>
                 <TableHead>Created At</TableHead>
-                <TableHead class="text-right">Actions</TableHead>
+                <TableHead class="text-left">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -25,10 +27,18 @@
                 :key="manager.id"
                 class="hover:bg-muted transition"
               >
+                <TableCell>
+                  <img 
+                    :src="manager.avatar" 
+                    :alt="manager.name"
+                    class="w-10 h-10 rounded-full object-cover"
+                  />
+                </TableCell>
                 <TableCell>{{ manager.name }}</TableCell>
                 <TableCell>{{ manager.email }}</TableCell>
+                <TableCell>{{ manager.national_id }}</TableCell>
                 <TableCell>{{ formatDate(manager.created_at) }}</TableCell>
-                <TableCell class="text-right space-x-2">
+                <TableCell class="text-left space-x-2">
                   <Button variant="outline" size="sm" @click="editManager(manager.id)">
                     Edit
                   </Button>
