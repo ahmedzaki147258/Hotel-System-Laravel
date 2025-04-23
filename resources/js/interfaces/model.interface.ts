@@ -38,3 +38,21 @@ export interface Reservation {
     room_id: number;
     room: Room;
 }
+
+export interface Receptionist{
+    id: number;
+      name: string;
+        email: string;
+        password: string;
+        national_id: string;
+        avatar_image: string;
+        created_at: string;
+}
+
+interface ReceptionistResponse {
+  data: Receptionist[];
+  current_page: number;
+  last_page: number;
+  prev_page_url: string | null;
+  next_page_url: string | null;
+}
