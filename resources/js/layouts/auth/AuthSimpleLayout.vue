@@ -1,31 +1,101 @@
 <script setup lang="ts">
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Link } from '@inertiajs/vue3';
+import { ref, onMounted } from 'vue';
 
 defineProps<{
     title?: string;
     description?: string;
 }>();
+
+// Subtle parallax effect for background
+const authBg = ref(null);
+const handleMouseMove = (e: MouseEvent) => {
+    if (authBg.value) {
+        const x = (window.innerWidth - e.pageX * 2) / 100;
+        const y = (window.innerHeight - e.pageY * 2) / 100;
+        (authBg.value as HTMLElement).style.transform = `translateX(${x}px) translateY(${y}px)`;
+    }
+};
+
+onMounted(() => {
+    // Add animated entrance class after mount
+    setTimeout(() => {
+        const formElement = document.querySelector('.auth-form-container');
+        if (formElement) {
+            formElement.classList.add('auth-form-visible');
+        }
+    }, 100);
+});
 </script>
 
 <template>
-    <div class="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
-        <div class="w-full max-w-sm">
+    <div
+        class="flex min-h-svh flex-col items-center justify-center relative overflow-hidden"
+        @mousemove="handleMouseMove"
+    >
+        <!-- Background with parallax effect -->
+        <div class="absolute inset-0 z-0">
+            <div ref="authBg" class="w-full h-full transition-transform duration-300 ease-out">
+                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')] bg-cover bg-center"></div>
+                <div class="absolute inset-0 bg-[#0b1626]/75 backdrop-blur-sm"></div>
+            </div>
+        </div>
+
+        <!-- Decorative elements -->
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-15 animate-blob animation-delay-2000"></div>
+
+        <!-- Main content -->
+        <div class="w-full max-w-md z-10 p-8">
             <div class="flex flex-col gap-8">
+                <!-- Logo and header -->
                 <div class="flex flex-col items-center gap-4">
                     <Link :href="route('home')" class="flex flex-col items-center gap-2 font-medium">
-                        <div class="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                            <AppLogoIcon class="size-9 fill-current text-[var(--foreground)] dark:text-white" />
+                        <div class="flex items-center justify-center">
+                            <div class="font-serif text-3xl font-bold text-white tracking-wider">
+                                <span class="text-[#e0b472]">LUXE</span>HOTEL
+                            </div>
                         </div>
                         <span class="sr-only">{{ title }}</span>
                     </Link>
                     <div class="space-y-2 text-center">
-                        <h1 class="text-xl font-medium">{{ title }}</h1>
-                        <p class="text-center text-sm text-muted-foreground">{{ description }}</p>
+                        <h1 class="text-2xl font-medium text-white">{{ title }}</h1>
+                        <p class="text-center text-sm text-gray-300">{{ description }}</p>
                     </div>
                 </div>
-                <slot />
+
+                <!-- Auth form container with glass effect -->
+                <div class="auth-form-container bg-white/10 backdrop-blur-md p-8 rounded-xl border border-white/20 shadow-xl transition-all duration-500 opacity-0 translate-y-8">
+                    <slot />
+                </div>
             </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="absolute bottom-4 text-center text-white/50 text-xs z-10">
+            &copy; {{ new Date().getFullYear() }} LUXE HOTEL. All rights reserved.
         </div>
     </div>
 </template>
+
+<style>
+@keyframes blob {
+    0% { transform: scale(1); }
+    33% { transform: scale(1.1); }
+    66% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+.animate-blob {
+    animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+
+.auth-form-visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+</style>
