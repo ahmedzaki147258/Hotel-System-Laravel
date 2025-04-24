@@ -13,6 +13,7 @@ use App\Http\Controllers\ReceptionistController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Middleware\EnsureUserIsAdmin;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -93,9 +94,11 @@ Route::middleware(['auth', IsAdminOrManager::class])->group(function () {
     // Receptionists management routes
     Route::resource('receptionists', ReceptionistController::class);
     Route::post('/receptionists/{receptionist}/ban', [ReceptionistController::class, 'ban'])->name('receptionists.ban');
-    Route::post('/receptionists/{receptionist}/unban', [ReceptionistController::class, 'unban'])->name('receptionists.unban');
+    Route::post('/receptionists/{receptionist}/unban', [ReceptionistController::class, 'unban'])->name('receptionists.unban');   
+});
 
-    // Managers management routes
+// Managers management routes
+Route::middleware(['auth', EnsureUserIsAdmin::class])->group(function () {
     Route::post('managers/{manager}', [ManagerController::class, 'update'])->name('managers.update');
     Route::resource('managers', ManagerController::class);
     Route::post('/managers/{manager}/ban', [ManagerController::class, 'ban'])->name('managers.ban');
