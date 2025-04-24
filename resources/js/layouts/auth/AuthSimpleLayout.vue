@@ -1,49 +1,25 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
 
 defineProps<{
     title?: string;
     description?: string;
 }>();
-
-// Subtle parallax effect for background
-const authBg = ref(null);
-const handleMouseMove = (e: MouseEvent) => {
-    if (authBg.value) {
-        const x = (window.innerWidth - e.pageX * 2) / 100;
-        const y = (window.innerHeight - e.pageY * 2) / 100;
-        (authBg.value as HTMLElement).style.transform = `translateX(${x}px) translateY(${y}px)`;
-    }
-};
-
-onMounted(() => {
-    // Add animated entrance class after mount
-    setTimeout(() => {
-        const formElement = document.querySelector('.auth-form-container');
-        if (formElement) {
-            formElement.classList.add('auth-form-visible');
-        }
-    }, 100);
-});
 </script>
 
 <template>
-    <div
-        class="flex min-h-svh flex-col items-center justify-center relative overflow-hidden"
-        @mousemove="handleMouseMove"
-    >
-        <!-- Background with parallax effect -->
+    <div class="flex min-h-svh flex-col items-center justify-center relative overflow-hidden">
+        <!-- Static Background -->
         <div class="absolute inset-0 z-0">
-            <div ref="authBg" class="w-full h-full transition-transform duration-300 ease-out">
+            <div class="w-full h-full">
                 <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')] bg-cover bg-center"></div>
                 <div class="absolute inset-0 bg-[#0b1626]/75 backdrop-blur-sm"></div>
             </div>
         </div>
 
-        <!-- Decorative elements -->
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-15 animate-blob animation-delay-2000"></div>
+        <!-- Static decorative elements -->
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-15"></div>
 
         <!-- Main content -->
         <div class="w-full max-w-md z-10 p-8">
@@ -65,7 +41,7 @@ onMounted(() => {
                 </div>
 
                 <!-- Auth form container with glass effect -->
-                <div class="auth-form-container bg-white/10 backdrop-blur-md p-8 rounded-xl border border-white/20 shadow-xl transition-all duration-500 opacity-0 translate-y-8">
+                <div class="auth-form-container bg-white/10 backdrop-blur-md p-8 rounded-xl border border-white/20 shadow-xl">
                     <slot />
                 </div>
             </div>
@@ -79,23 +55,5 @@ onMounted(() => {
 </template>
 
 <style>
-@keyframes blob {
-    0% { transform: scale(1); }
-    33% { transform: scale(1.1); }
-    66% { transform: scale(0.9); }
-    100% { transform: scale(1); }
-}
-
-.animate-blob {
-    animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-    animation-delay: 2s;
-}
-
-.auth-form-visible {
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-}
+/* No animations */
 </style>
