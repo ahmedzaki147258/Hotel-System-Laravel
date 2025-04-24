@@ -36,6 +36,42 @@
               </div>
 
               <div class="space-y-2">
+                <Label for="national_id">National ID</Label>
+                <Input
+                  id="national_id"
+                  v-model="form.national_id"
+                  type="text"
+                  placeholder="Enter manager national ID"
+                  :disabled="form.processing"
+                  required
+                />
+              </div>
+
+              <div class="space-y-2">
+                <Label for="avatar">Profile Image</Label>
+                <div class="flex items-center space-x-4">
+                  <div v-if="form.avatar_image || props.manager.avatar" class="relative w-20 h-20">
+                    <img
+                      :src="form.avatar_image ? window.URL.createObjectURL(form.avatar_image) : props.manager.avatar"
+                      alt="Profile preview"
+                      class="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
+                  <Input
+                    id="avatar"
+                    type="file"
+                    accept="image/*"
+                    @change="(e) => form.avatar_image = e.target.files[0]"
+                    :disabled="form.processing"
+                    class="flex-1"
+                  />
+                </div>
+                <p class="text-sm text-muted-foreground">
+                  Upload a new profile image (optional)
+                </p>
+              </div>
+
+              <div class="space-y-2">
                 <Label for="password">Password</Label>
                 <Input
                   id="password"
@@ -87,13 +123,17 @@ const props = defineProps<{
     id: number;
     name: string;
     email: string;
+    national_id: string;
+    avatar: string;
   }
 }>();
 
 const form = useForm({
   name: props.manager.name,
   email: props.manager.email,
+  national_id: props.manager.national_id,
   password: '',
+  avatar_image: null,
 });
 
 // Breadcrumbs
@@ -109,6 +149,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const submit = () => {
-  form.put(route('managers.update', props.manager.id));
+  router.post(route('managers.update', props.manager.id), {
+    _method: 'put',
+    ...form,
+  });
 };
 </script> 

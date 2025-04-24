@@ -96,6 +96,7 @@ Route::middleware(['auth', IsAdminOrManager::class])->group(function () {
     Route::post('/receptionists/{receptionist}/unban', [ReceptionistController::class, 'unban'])->name('receptionists.unban');
 
     // Managers management routes
+    Route::post('managers/{manager}', [ManagerController::class, 'update'])->name('managers.update');
     Route::resource('managers', ManagerController::class);
     Route::post('/managers/{manager}/ban', [ManagerController::class, 'ban'])->name('managers.ban');
     Route::post('/managers/{manager}/unban', [ManagerController::class, 'unban'])->name('managers.unban');
