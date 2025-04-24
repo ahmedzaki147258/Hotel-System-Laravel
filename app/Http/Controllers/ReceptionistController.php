@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Cog\Laravel\Ban\Traits\Bannable;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
+
 
 class ReceptionistController extends Controller
 {
@@ -21,34 +24,36 @@ class ReceptionistController extends Controller
 
     public function index(Request $request)
     {
-        $receptionists = Staff::role('receptionist')->paginate($request->input('per_page', 1));
-
+        $receptionists = Staff::role('receptionist')->with('manager')->paginate($request->input('per_page', 5));
         // Transform the data using map()
+
         $transformedData = $receptionists->getCollection()->map(function ($receptionist) {
+
             return [
                 'id' => $receptionist->id,
-                'name' => $receptionist->name,
+                'name' => $receptionist->name ? $receptionist->name : "DEFAULT_NAME",
                 'email' => $receptionist->email,
                 'national_id' => $receptionist->national_id,
                 'avatar' => $receptionist->avatar_image
                     ? Storage::url($receptionist->avatar_image)
                     : Storage::url('receptionists/default-avatar.png'),
                 'is_banned' => $receptionist->isBanned(),
-                'created_at' => $receptionist->created_at
+                'created_at' => $receptionist->created_at,
+                'manager' => optional($receptionist->manager)->name ?? 'DEFAULT_NAME',
             ];
         });
 
-        // Create new paginator with transformed data
-        $receptionists = new \Illuminate\Pagination\LengthAwarePaginator(
+        $receptionists = new LengthAwarePaginator(
             $transformedData,
             $receptionists->total(),
             $receptionists->perPage(),
             $receptionists->currentPage(),
             ['path' => $request->url()]
         );
-
+        $isAdmin =  Auth::user()->hasRole('admin');
         return Inertia::render('Receptionists/Index', [
-            'receptionists' => $receptionists
+            'receptionists' => $receptionists,
+            'isAdmin' => $isAdmin
         ]);
     }
     /**
@@ -56,7 +61,6 @@ class ReceptionistController extends Controller
      */
     public function create()
     {
-        //$this->authorize('create', Staff::class);
 
         return Inertia::render('Receptionists/Create');
     }
@@ -66,7 +70,7 @@ class ReceptionistController extends Controller
      */
     public function store(Request $request)
     {
-        // $this->authorize('create', Staff::class);
+
 
         $validator = Validator::make($request->all(), [
             'name' => 'nullable|string|max:255',
@@ -74,6 +78,7 @@ class ReceptionistController extends Controller
             'national_id' => 'required|string|unique:staff,national_id',
             'password' => 'required|string|min:6',
             'avatar_image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            'manager_id' => 'nullable'
         ]);
 
         if ($validator->fails()) {
@@ -84,6 +89,7 @@ class ReceptionistController extends Controller
         }
 
         $data = $validator->validated();
+        $data['manager_id'] = auth()->id();
 
         $data['password'] = Hash::make($data['password']);
 
@@ -95,13 +101,15 @@ class ReceptionistController extends Controller
             if (!Storage::disk('public')->exists($data['avatar_image'])) {
                 Storage::disk('public')->put(
                     $data['avatar_image'],
-                    file_get_contents(public_path('images/default-avatar.jpg'))
+                    Storage::url('receptionists/default-avatar.png')
                 );
             }
         }
 
+
         $receptionist = Staff::create($data);
         $receptionist->assignRole('receptionist');
+
 
         return to_route('receptionists.index')
             ->with('success', 'Receptionist created successfully.');
@@ -112,7 +120,6 @@ class ReceptionistController extends Controller
      */
     public function show(Staff $receptionist)
     {
-        //$this->authorize('view', $receptionist);
 
         return Inertia::render('Receptionists/Show', [
             'receptionist' => [
@@ -120,7 +127,8 @@ class ReceptionistController extends Controller
                 'name' => $receptionist->name,
                 'email' => $receptionist->email,
                 'national_id' => $receptionist->national_id,
-                'avatar' => $receptionist->avatar_image ? Storage::url($receptionist->avatar_image) : asset('receptionists/default-avatar.png'),
+                'avatar' => $receptionist->avatar_image ? Storage::url($receptionist->avatar_image) : Storage::url('receptionists/default-avatar.png')
+
             ]
         ]);
     }
@@ -130,7 +138,6 @@ class ReceptionistController extends Controller
      */
     public function edit(Staff $receptionist)
     {
-        // $this->authorize('update', $receptionist);
 
         return Inertia::render('Receptionists/Edit', [
             'receptionist' => [
@@ -138,7 +145,8 @@ class ReceptionistController extends Controller
                 'name' => $receptionist->name,
                 'email' => $receptionist->email,
                 'national_id' => $receptionist->national_id,
-                'avatar' => $receptionist->avatar_image ? Storage::url($receptionist->avatar_image) : asset('receptionists/default-avatar.png'),
+                'avatar' => $receptionist->avatar_image ? Storage::url($receptionist->avatar_image) : Storage::url('receptionists/default-avatar.png')
+
             ]
         ]);
     }
@@ -148,34 +156,29 @@ class ReceptionistController extends Controller
      */
     public function update(Request $request, Staff $receptionist)
     {
-        //$this->authorize('update', $receptionist);
-
-
         $validator = Validator::make($request->all(), [
             'name' => 'nullable|string|max:255',
-            'email' => 'email|unique:staff,email,' . $receptionist->id,
-            'national_id' => 'string|unique:staff,national_id,' . $receptionist->id,
+            'email' => 'required|email|unique:staff,email,' . $receptionist->id,
+            'national_id' => 'required|string|unique:staff,national_id,' . $receptionist->id,
             'password' => 'nullable|string|min:6',
             'avatar_image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
         if ($validator->fails()) {
-            return redirect()
-                ->back()
-                ->withErrors($validator)
-                ->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         }
+
         $data = $validator->validated();
 
+        // Handle password update if provided
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
             unset($data['password']);
         }
-
-
-
-        if ($request['avatar_image']) {
+        // Handle avatar image upload and cleanup
+        if ($request->hasFile('avatar_image')) {
+            // Delete old avatar if it's not the default one
             if (
                 $receptionist->avatar_image &&
                 $receptionist->avatar_image !== 'receptionists/default-avatar.jpg' &&
@@ -183,13 +186,21 @@ class ReceptionistController extends Controller
             ) {
                 Storage::disk('public')->delete($receptionist->avatar_image);
             }
+
+            // Store the new avatar
             $data['avatar_image'] = $request->file('avatar_image')->store('receptionists', 'public');
         }
 
-        $receptionist->update($data);
-        return to_route('receptionists.index')
-            ->with('success', 'Receptionist updated successfully.');
+        // Update the receptionist record
+        try {
+            $receptionist->update($data);
+
+            return to_route('receptionists.index')->with('success', 'Receptionist updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Update failed: ' . $e->getMessage());
+        }
     }
+
 
     /**
      * Remove the specified receptionist from storage.

@@ -45,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // payment routes
-Route::middleware(['auth:sanctum', 'auth:client'])->group(function (){
+Route::middleware(['auth:sanctum', 'auth:client'])->group(function () {
     Route::get('/reservation/payment', [StripeController::class, 'reservationPayment'])->name('stripe.reservation.payment');
     Route::get('/reservation/success', [StripeController::class, 'reservationSuccess'])->name('stripe.reservation.success');
     Route::get('/client/store-reservation', [ClientController::class, 'storeReservation'])->middleware(['auth:sanctum', 'auth:client'])->name('client.store.reservation');
@@ -58,6 +58,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my-approved-clients', [ClientManagementController::class, 'myApprovedClients'])->name('clients.approved');
     Route::post('/clients/{client}/approve', [ClientManagementController::class, 'approve'])->name('clients.approve');
 
+    //receptionists
+    Route::post('receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
     // Receptionists management routes
     Route::resource('receptionists', ReceptionistController::class);
     Route::post('/receptionists/{receptionist}/ban', [ReceptionistController::class, 'ban'])->name('receptionists.ban');
@@ -70,7 +72,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-// Route::match(['PUT', 'POST'], 'receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
 
 // // View any clients or show specific client
 // Route::get('/receptionists', [ReceptionistController::class, 'index'])->name('receptionists.index');

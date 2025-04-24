@@ -47,10 +47,11 @@ export interface Receptionist{
         national_id: string;
         avatar_image: string;
         created_at: string;
+         manager?: string;
 }
 
-interface ReceptionistResponse {
-  data: Receptionist[];
+export interface ReceptionistResponse {
+   data: Array<Receptionist & { manager?: string }>;
   current_page: number;
   last_page: number;
   prev_page_url: string | null;

@@ -22,7 +22,8 @@ class Staff extends Authenticatable implements BannableContract
         'password',
         'national_id',
         'avatar_image',
-        'created_at'
+        'created_at',
+        'manager_id'
     ];
 
     protected $hidden = [
@@ -34,4 +35,14 @@ class Staff extends Authenticatable implements BannableContract
         //'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function manager()
+    {
+        return $this->belongsTo(Staff::class, 'manager_id');
+    }
+
+    public function subordinates()
+    {
+        return $this->hasMany(Staff::class, 'manager_id');
+    }
 }

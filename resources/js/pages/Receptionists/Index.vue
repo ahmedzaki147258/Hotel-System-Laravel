@@ -103,27 +103,12 @@ import {
   type ColumnDef
 } from '@tanstack/vue-table'
 
-interface Receptionist {
-  id: number;
-  name: string;
-  email: string;
-  created_at: string;
-  is_banned: boolean;
-}
 
-interface ReceptionistResponse {
-  data: Receptionist[];
-  current_page: number;
-  last_page: number;
-  prev_page_url: string | null;
-  next_page_url: string | null;
-  from: number;
-  to: number;
-  total: number;
-}
+
 
 const props = defineProps<{
   receptionists: ReceptionistResponse;
+  isAdmin: boolean;
 }>();
 
 const pageTitle = ref('Receptionists');
@@ -132,20 +117,36 @@ const receptionistToDelete = ref<number | null>(null);
 
 const columnHelper = createColumnHelper<Receptionist>();
 
-const columns = computed<ColumnDef<Receptionist>[]>(() => [
-  columnHelper.accessor('name', {
-    header: 'Name',
-    cell: info => info.getValue(),
-  }),
-  columnHelper.accessor('email', {
-    header: 'Email',
-    cell: info => info.getValue(),
-  }),
-  columnHelper.accessor('created_at', {
-    header: 'Created At',
-    cell: info => new Date(info.getValue()).toLocaleDateString(),
-  }),
-]);
+const columns = computed<ColumnDef<Receptionist>[]>(() => {
+  const baseColumns = [
+    columnHelper.accessor('name', {
+      header: 'Name',
+      cell: info => info.getValue(),
+    }),
+    columnHelper.accessor('email', {
+      header: 'Email',
+      cell: info => info.getValue(),
+    }),
+    columnHelper.accessor('created_at', {
+      header: 'Created At',
+      cell: info => new Date(info.getValue()).toLocaleDateString(),
+    }),
+  ];
+
+  // Conditionally add Manager column for admins
+  if (props.isAdmin) {
+    baseColumns.push(
+      columnHelper.accessor('manager', {
+        header: 'Manager',
+        cell: info => info.getValue() ?? 'No Manager',
+      })
+    );
+  }
+
+  return baseColumns;
+});
+
+
 
 const table = ref(
   useVueTable({
