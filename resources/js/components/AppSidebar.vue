@@ -13,7 +13,7 @@ import AppLogo from './AppLogo.vue';
 
 const userRole = computed(() => {
     const roles = usePage().props.auth.user.roles;
-    return roles && roles.length > 0 ? roles[0].name : 'Client';
+    return roles[0].name;
 });
 
 const mainNavItems: NavItem[] = [
