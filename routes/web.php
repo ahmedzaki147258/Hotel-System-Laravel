@@ -97,6 +97,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::get('clients-export', [DashboardController::class, 'export'])->name('clients.export');
+Route::get('dashboard-statistics', [DashboardController::class, 'statistics'])->name('dashboard.statistics');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
