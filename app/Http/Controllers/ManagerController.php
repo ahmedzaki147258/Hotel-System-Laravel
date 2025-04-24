@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Cog\Laravel\Ban\Traits\Bannable;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ManagerController extends Controller
 {
@@ -17,30 +18,33 @@ class ManagerController extends Controller
 
     public function index(Request $request)
     {
-        $limit = $request->limit ?? 5;
-        $page = $request->page ?? 1;
+        $managers = Staff::role('manager')->paginate($request->input('per_page', 5));
+        
+        // Transform the data using map()
+        $transformedData = $managers->getCollection()->map(function ($manager) {
+            return [
+                'id' => $manager->id,
+                'name' => $manager->name ? $manager->name : "DEFAULT_NAME",
+                'email' => $manager->email,
+                'national_id' => $manager->national_id,
+                'avatar' => $manager->avatar_image
+                    ? Storage::url($manager->avatar_image)
+                    : Storage::url('managers/default-avatar.png'),
+                'is_banned' => $manager->isBanned(),
+                'created_at' => $manager->created_at,
+            ];
+        });
 
-        $managers = Staff::role('manager')
-            ->paginate($limit, ['*'], 'page', $page);
+        $managers = new LengthAwarePaginator(
+            $transformedData,
+            $managers->total(),
+            $managers->perPage(),
+            $managers->currentPage(),
+            ['path' => $request->url()]
+        );
 
         return Inertia::render('Managers/Index', [
-            'managers' => $managers->through(function ($manager) {
-                return [
-                    'id' => $manager->id,
-                    'name' => $manager->name,
-                    'email' => $manager->email,
-                    'national_id' => $manager->national_id,
-                    'avatar' => $manager->avatar_image ? Storage::url($manager->avatar_image) : Storage::url('managers/default-avatar.png'),
-                    'is_banned' => $manager->isBanned(),
-                    'created_at' => $manager->created_at
-                ];
-            }),
-            'pagination' => [
-                'current_page' => $managers->currentPage(),
-                'last_page' => $managers->lastPage(),
-                'per_page' => $managers->perPage(),
-                'total' => $managers->total(),
-            ],
+            'managers' => $managers,
         ]);
     }
 

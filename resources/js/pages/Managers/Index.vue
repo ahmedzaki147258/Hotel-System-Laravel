@@ -59,31 +59,26 @@
         </CardContent>
       </Card>
 
-      <!-- Pagination -->
-      <div v-if="managers.pagination" class="flex items-center justify-between">
-        <div class="flex-1 text-sm text-muted-foreground">
-          Page {{ managers.pagination.current_page }} of {{ managers.pagination.last_page }}
-        </div>
-        <div class="flex items-center space-x-6 lg:space-x-8">
-          <div class="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              :disabled="managers.pagination.current_page === 1"
-              @click="changePage(managers.pagination.current_page - 1)"
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              :disabled="managers.pagination.current_page === managers.pagination.last_page"
-              @click="changePage(managers.pagination.current_page + 1)"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+      <div class="flex justify-end items-center space-x-2 mt-4">
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="!managers.prev_page_url"
+          @click="changePage(managers.current_page - 1)"
+        >
+          Previous
+        </Button>
+        <span class="text-sm text-muted-foreground">
+          Page {{ managers.current_page }} of {{ managers.last_page }}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="!managers.next_page_url"
+          @click="changePage(managers.current_page + 1)"
+        >
+          Next
+        </Button>
       </div>
 
       <!-- Delete Confirmation Dialog -->
@@ -191,7 +186,10 @@ function toggleBan(managerId, isBanned) {
 }
 
 function changePage(page) {
-  router.get(route('managers.index', { page }));
+  router.get(route('managers.index', { page }), {
+    preserveScroll: true,
+    only: ['managers'],
+  });
 }
 
 // Format date to a readable string
