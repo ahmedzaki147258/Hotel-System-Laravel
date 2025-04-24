@@ -22,11 +22,38 @@ Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('client/dashboard', function () {
-    return Inertia::render('ClientDashboard', [
-        'countries' => CountryHelper::getVisibleCountries()
-    ]);
-})->middleware(['auth:sanctum', 'auth:client'])->name('client.dashboard');
+// Client dashboard routes
+Route::middleware(['auth:sanctum', 'auth:client'])->group(function () {
+    Route::get('client/dashboard', function () {
+        return Inertia::render('ClientDashboard', [
+            'countries' => CountryHelper::getVisibleCountries()
+        ]);
+    })->name('client.dashboard');
+
+    Route::get('client/make-reservation', function () {
+        return Inertia::render('ClientDashboard', [
+            'countries' => CountryHelper::getVisibleCountries()
+        ]);
+    })->name('client.make.reservation');
+
+    Route::get('client/my-reservations', function () {
+        return Inertia::render('ClientDashboard', [
+            'countries' => CountryHelper::getVisibleCountries()
+        ]);
+    })->name('client.my.reservations');
+
+    Route::get('client/profile', function () {
+        return Inertia::render('ClientDashboard', [
+            'countries' => CountryHelper::getVisibleCountries()
+        ]);
+    })->name('client.profile');
+
+    Route::get('client/appearance', function () {
+        return Inertia::render('ClientDashboard', [
+            'countries' => CountryHelper::getVisibleCountries()
+        ]);
+    })->name('client.appearance');
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('client')

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm, usePage, router } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { getCookie, setCookie, removeCookie } from '@/utils/auth';
 import { Calendar, User, Moon, Sun, Clock, LogOut } from 'lucide-vue-next';
 
@@ -28,6 +28,15 @@ const client = ref<Client | null>(null);
 const countries = ref<Country[]>([]);
 const activeTab = ref('make-reservation');
 const theme = ref(localStorage.getItem('theme') || 'system');
+
+// Get current route
+const getCurrentTab = () => {
+    const path = window.location.pathname;
+    if (path.includes('/client/my-reservations')) return 'my-reservations';
+    if (path.includes('/client/profile')) return 'profile';
+    if (path.includes('/client/appearance')) return 'appearance';
+    return 'make-reservation'; // Default
+};
 
 const fetchClientData = async () => {
   try {
@@ -62,7 +71,34 @@ onMounted(() => {
 
     fetchClientData();
     applyTheme(theme.value);
+
+    // Set active tab based on current route
+    activeTab.value = getCurrentTab();
 });
+
+// Change URL when tab changes
+const changeTab = (tab: string) => {
+    activeTab.value = tab;
+
+    // Update URL based on tab
+    let url = '/client/';
+    switch(tab) {
+        case 'make-reservation':
+            url += 'make-reservation';
+            break;
+        case 'my-reservations':
+            url += 'my-reservations';
+            break;
+        case 'profile':
+            url += 'profile';
+            break;
+        case 'appearance':
+            url += 'appearance';
+            break;
+    }
+
+    router.visit(url, { preserveState: true });
+};
 
 const applyTheme = (selectedTheme: string) => {
     theme.value = selectedTheme;
@@ -111,25 +147,28 @@ const handleLogout = () => {
             <nav class="flex-1 space-y-2">
                 <Button variant="ghost" class="w-full justify-start"
                     :class="{ 'bg-secondary': activeTab === 'make-reservation' }"
-                    @click="activeTab = 'make-reservation'">
+                    @click="changeTab('make-reservation')">
                     <Calendar class="mr-2 h-4 w-4" />
                     Make Reservation
                 </Button>
 
                 <Button variant="ghost" class="w-full justify-start"
-                    :class="{ 'bg-secondary': activeTab === 'my-reservations' }" @click="activeTab = 'my-reservations'">
+                    :class="{ 'bg-secondary': activeTab === 'my-reservations' }"
+                    @click="changeTab('my-reservations')">
                     <Clock class="mr-2 h-4 w-4" />
                     My Reservations
                 </Button>
 
                 <Button variant="ghost" class="w-full justify-start"
-                    :class="{ 'bg-secondary': activeTab === 'profile' }" @click="activeTab = 'profile'">
+                    :class="{ 'bg-secondary': activeTab === 'profile' }"
+                    @click="changeTab('profile')">
                     <User class="mr-2 h-4 w-4" />
                     Profile
                 </Button>
 
                 <Button variant="ghost" class="w-full justify-start"
-                    :class="{ 'bg-secondary': activeTab === 'appearance' }" @click="activeTab = 'appearance'">
+                    :class="{ 'bg-secondary': activeTab === 'appearance' }"
+                    @click="changeTab('appearance')">
                     <Sun class="mr-2 h-4 w-4" />
                     Appearance
                 </Button>
