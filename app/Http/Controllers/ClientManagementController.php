@@ -6,6 +6,7 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Notifications\ClientApprovedNotification;
 use Lwwcas\LaravelCountries\Models\Country;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -141,7 +142,8 @@ class ClientManagementController extends Controller
             'approved_by' => $staff->id,
             'approved_at' => now(),
         ]);
-
+       
+        $client->notify(new ClientApprovedNotification($client));
         return redirect()->back()->with('success', 'Client approved successfully');
     }
 
