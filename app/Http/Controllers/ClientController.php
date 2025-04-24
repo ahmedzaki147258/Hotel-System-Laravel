@@ -170,6 +170,6 @@ class ClientController extends Controller
 
         $room->update(['status' => 'unavailable']);
         session()->forget('reservation_details');
-        return redirect()->route('client.dashboard')->with('success', 'Reservation completed successfully');
+        return redirect()->route('client.my.reservations')->with('success', 'Reservation completed successfully');
     }
 }
