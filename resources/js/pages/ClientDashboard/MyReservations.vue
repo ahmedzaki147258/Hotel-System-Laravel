@@ -17,6 +17,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Reservation } from '@/interfaces/model.interface';
+import { router } from '@inertiajs/vue3';
 
 const loading = ref(false);
 const data = ref<Reservation[]>([]);
@@ -26,6 +27,24 @@ const pagination = ref<PaginationState>({
 });
 const totalItems = ref(0);
 const totalPages = ref(1);
+
+// Get current pagination from URL
+const initPaginationFromUrl = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
+    const limitParam = urlParams.get('limit');
+
+    if (pageParam) {
+        pagination.value.pageIndex = parseInt(pageParam) - 1;
+    }
+
+    if (limitParam) {
+        pagination.value.pageSize = parseInt(limitParam);
+    }
+};
+
+// Initialize from URL on component mount
+initPaginationFromUrl();
 
 const columns = [
     {
@@ -102,7 +121,12 @@ const fetchReservations = async () => {
     loading.value = true;
     try {
         const page = pagination.value.pageIndex + 1;
-        const response = await fetch(`/client/reservations?page=${page}&limit=${pagination.value.pageSize}`);
+        const limit = pagination.value.pageSize;
+
+        // Update URL with page and limit
+        updateUrl(page, limit);
+
+        const response = await fetch(`/client/reservations?page=${page}&limit=${limit}`);
         const result = await response.json();
 
         data.value = result.data;
@@ -113,6 +137,16 @@ const fetchReservations = async () => {
     } finally {
         loading.value = false;
     }
+};
+
+// Update URL with pagination parameters
+const updateUrl = (page: number, limit: number) => {
+    router.visit(`/client/my-reservations?page=${page}&limit=${limit}`, {
+        preserveState: true,
+        preserveScroll: true,
+        only: [],
+        replace: true
+    });
 };
 
 const onPageSizeChange = (value: AcceptableValue) => {
