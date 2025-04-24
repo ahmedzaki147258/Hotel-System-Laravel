@@ -147,16 +147,16 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
     <h1 class="text-2xl font-bold mb-6">Make Reservation</h1>
 
     <!-- Success message -->
-    <Alert v-if="successMessage" class="bg-green-50 border-green-500 mb-4">
-      <Calendar class="h-4 w-4 text-green-500" />
-      <AlertTitle class="text-green-700">Success!</AlertTitle>
-      <AlertDescription class="text-green-600">{{ successMessage }}</AlertDescription>
+    <Alert v-if="successMessage" class="bg-green-50 border-green-500 mb-4 dark:bg-green-900/20 dark:border-green-600 dark:text-green-400">
+      <Calendar class="h-4 w-4 text-green-500 dark:text-green-400" />
+      <AlertTitle class="text-green-700 dark:text-green-400">Success!</AlertTitle>
+      <AlertDescription class="text-green-600 dark:text-green-400">{{ successMessage }}</AlertDescription>
     </Alert>
 
     <!-- Loading state for initial fetch -->
     <div v-if="loading" class="flex flex-col items-center justify-center h-64">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-      <p class="text-gray-600">{{ loadingMessage || 'Loading...' }}</p>
+      <p class="text-gray-600 dark:text-gray-400">{{ loadingMessage || 'Loading...' }}</p>
     </div>
 
     <div v-else-if="floors.length === 0" class="text-center p-8">
@@ -170,7 +170,7 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
 
     <div v-else class="space-y-8">
       <!-- Floors Slider -->
-      <div class="p-4 bg-gray-50 rounded-lg">
+      <div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
         <h2 class="text-lg font-semibold mb-3">Select Floor</h2>
         <Swiper
           :slides-per-view="3.5"
@@ -194,7 +194,7 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
             >
               <Home class="h-5 w-5 mx-auto mb-1" />
               <p>{{ floor.number }}</p>
-              <p class="text-xs text-gray-500">{{ floor.name }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ floor.name }}</p>
             </div>
           </SwiperSlide>
         </Swiper>
@@ -208,7 +208,7 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
             <div
               v-for="room in roomsForCurrentFloor"
               :key="room.id"
-              class="bg-white rounded-lg shadow-md overflow-hidden border"
+              class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border dark:border-gray-700"
             >
               <!-- Room Image with Status Badge -->
               <div class="relative">
@@ -225,11 +225,11 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
               <div class="p-4">
                 <h3 class="font-semibold text-lg">Room: {{ room.number }}</h3>
                 <div class="mt-2 space-y-2">
-                  <div class="flex items-center text-gray-600">
+                  <div class="flex items-center text-gray-600 dark:text-gray-300">
                     <DollarSign class="h-4 w-4 mr-2" />
                     <span>{{ room.price }} per night</span>
                   </div>
-                  <div class="flex items-center text-gray-600">
+                  <div class="flex items-center text-gray-600 dark:text-gray-300">
                     <Users class="h-4 w-4 mr-2" />
                     <span>Capacity: {{ room.capacity }} guests</span>
                   </div>
@@ -249,8 +249,8 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
           </div>
 
           <!-- Empty state when no rooms -->
-          <div v-if="roomsForCurrentFloor.length === 0" class="text-center p-8 bg-gray-50 rounded-lg">
-            <p class="text-gray-500">No rooms available on this floor</p>
+          <div v-if="roomsForCurrentFloor.length === 0" class="text-center p-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <p class="text-gray-500 dark:text-gray-400">No rooms available on this floor</p>
           </div>
         </div>
       </div>
@@ -268,9 +268,9 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
 
         <div class="space-y-4 py-2">
           <!-- Error message -->
-          <Alert v-if="errorMessage" class="bg-red-50 border-red-500">
-            <AlertTitle class="text-red-700">Error</AlertTitle>
-            <AlertDescription class="text-red-600">{{ errorMessage }}</AlertDescription>
+          <Alert v-if="errorMessage" class="bg-red-50 border-red-500 dark:bg-red-900/20 dark:border-red-600 dark:text-red-400">
+            <AlertTitle class="text-red-700 dark:text-red-400">Error</AlertTitle>
+            <AlertDescription class="text-red-600 dark:text-red-400">{{ errorMessage }}</AlertDescription>
           </Alert>
 
           <div class="space-y-2">
@@ -285,7 +285,7 @@ const roomImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a42
               :max="selectedRoom?.capacity"
               @input="validateAccompanyNumber"
             />
-            <p v-if="selectedRoom" class="text-xs text-gray-500">
+            <p v-if="selectedRoom" class="text-xs text-gray-500 dark:text-gray-400">
               This room has a maximum capacity of {{ selectedRoom.capacity }} guests.
             </p>
           </div>
