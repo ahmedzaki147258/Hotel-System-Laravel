@@ -40,6 +40,7 @@ class ReceptionistController extends Controller
                 'is_banned' => $receptionist->isBanned(),
                 'created_at' => $receptionist->created_at,
                 'manager' => optional($receptionist->manager)->name ?? 'DEFAULT_NAME',
+                'manager_id' => $receptionist->manager_id,
             ];
         });
 
@@ -51,9 +52,13 @@ class ReceptionistController extends Controller
             ['path' => $request->url()]
         );
         $isAdmin =  Auth::user()->hasRole('admin');
+        $isManager =  Auth::user()->hasRole('manager');
+
         return Inertia::render('Receptionists/Index', [
             'receptionists' => $receptionists,
-            'isAdmin' => $isAdmin
+            'isAdmin' => $isAdmin,
+            'isManager' => $isManager,
+            'currentManagerId' => Auth::id(),
         ]);
     }
     /**

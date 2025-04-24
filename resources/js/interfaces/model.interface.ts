@@ -48,6 +48,7 @@ export interface Receptionist{
         avatar_image: string;
         created_at: string;
          manager?: string;
+          manager_id?: number;
 }
 
 export interface ReceptionistResponse {

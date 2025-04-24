@@ -17,20 +17,25 @@
                     :props="header.getContext()" />
                 </TableHead>
               </TableRow>
-            </TableHeader>
+            </TableHeader>  
             <TableBody>
               <TableRow v-for="row in table.getRowModel().rows" :key="row.id">
                 <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
                   <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
                 </TableCell>
                 <TableCell class="text-right space-x-2">
-                  <Button variant="outline" size="sm" @click="editReceptionist(row.original.id)">
+                  <Button
+                   v-if="canManageReceptionist(row.original)"
+                    variant="outline" size="sm" @click="editReceptionist(row.original.id)">
                     Edit
                   </Button>
-                  <Button variant="destructive" size="sm" @click="openDeleteModal(row.original.id)">
+                  <Button 
+                      v-if="canManageReceptionist(row.original)"
+                      variant="destructive" size="sm" @click="openDeleteModal(row.original.id)">
                     Delete
                   </Button>
                   <Button
+                   v-if="canManageReceptionist(row.original)"
                     :variant="row.original.is_banned ? 'success' : 'secondary'"
                     size="sm"
                     @click="toggleBan(row.original.id, row.original.is_banned)"
@@ -46,6 +51,7 @@
 
       <div class="flex justify-end items-center space-x-2 mt-4">
         <Button
+        
           variant="outline"
           size="sm"
           :disabled="!receptionists.prev_page_url"
@@ -109,6 +115,8 @@ import {
 const props = defineProps<{
   receptionists: ReceptionistResponse;
   isAdmin: boolean;
+  isManager:boolean;
+   currentManagerId: number;
 }>();
 
 const pageTitle = ref('Receptionists');
@@ -170,7 +178,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     href: '/receptionists',
   }
 ];
+const canManageReceptionist = (receptionist: Receptionist) => {
 
+  return props.isAdmin || 
+        (props.isManager && receptionist.manager_id === props.currentManagerId);
+};
 const goToCreateReceptionist = () => {
   router.visit(route('receptionists.create'));
 };

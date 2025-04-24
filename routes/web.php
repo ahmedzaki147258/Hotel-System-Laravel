@@ -59,6 +59,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clients/{client}/approve', [ClientManagementController::class, 'approve'])->name('clients.approve');
 
     //receptionists
+});
+
+Route::middleware(['auth', IsAdminOrManager::class])->group(function () {
     Route::post('receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
     // Receptionists management routes
     Route::resource('receptionists', ReceptionistController::class);
@@ -70,21 +73,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/managers/{manager}/ban', [ManagerController::class, 'ban'])->name('managers.ban');
     Route::post('/managers/{manager}/unban', [ManagerController::class, 'unban'])->name('managers.unban');
 });
-
-
-
-// // View any clients or show specific client
-// Route::get('/receptionists', [ReceptionistController::class, 'index'])->name('receptionists.index');
-// // Display the receptionists edit page
-// Route::get('/receptionists/{receptionist}/edit', [ReceptionistController::class, 'edit'])->name('receptionists.edit');
-// Route::get('/receptionists/create', [ReceptionistController::class, 'create'])->name('receptionists.create');
-
-// Route::delete('receptionists/{receptionist}', [ReceptionistController::class, 'destroy'])->name('receptionists.destroy');
-// // Update client information
-// Route::put('receptionists/{receptionist}', [ReceptionistController::class, 'update'])->name('receptionists.update');
-
-
-//Route::post('/receptionists', [ReceptionistController::class, 'store'])->name('receptionists.store');
 
 
 Route::middleware(['auth', IsAdminOrManager::class])->group(function () {
