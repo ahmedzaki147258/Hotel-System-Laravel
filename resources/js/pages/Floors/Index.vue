@@ -5,7 +5,6 @@ import { Head } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 
-// Import shadcn-vue components
 import { 
   Table, 
   TableHeader, 
@@ -26,9 +25,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-// Props
+
 const props = defineProps({
-  floors: Array,
+  floors: Object,
   userRole: String,
   isAdmin: {
     type: Boolean,
@@ -37,19 +36,17 @@ const props = defineProps({
   isManager: {
     type: Boolean,
     default: false
-    },
+  },
   currentId: {
     type: Number,
     default: null
   },
 });
 
-// State
-const isModalOpen = ref(false)
-const floorToDelete = ref(null)
+const isModalOpen = ref(false);
+const floorToDelete = ref(null);
 
-// Computed
-const pageTitle = 'Manage Floors'
+const pageTitle = 'Manage Floors';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -58,94 +55,106 @@ const breadcrumbs: BreadcrumbItem[] = [
   }
 ];
 
-// Methods
 function goToCreate() {
-  router.visit(route('floors.create'))
+  router.visit(route('floors.create'));
 }
 
 function editFloor(floorId) {
-  
-  router.get(route('floors.edit', { floor: floorId }))
+  router.get(route('floors.edit', { floor: floorId }));
 }
 
 function openDeleteModal(floorId) {
-  isModalOpen.value = true
-  floorToDelete.value = floorId
+  isModalOpen.value = true;
+  floorToDelete.value = floorId;
 }
 
 function closeModal() {
-  isModalOpen.value = false
-  floorToDelete.value = null
+  isModalOpen.value = false;
+  floorToDelete.value = null;
 }
 
 function confirmDelete() {
   if (floorToDelete.value) {
-    router.delete(route('floors.destroy', floorToDelete.value))
+    router.delete(route('floors.destroy', floorToDelete.value));
   }
-  closeModal()
+  closeModal();
+}
+
+function changePage(page: number) {
+  router.get(route('floors.index', { page }), {
+    preserveScroll: true,
+    only: ['floors'],
+  });
 }
 </script>
 
 <template>
-    <Head :title="pageTitle" />
-  
-    <AppLayout :breadcrumbs="breadcrumbs">
-      <div class="flex h-full flex-col gap-4 rounded-xl p-4">
-        <div class="p-6 space-y-6">
-          <h1 class="text-2xl font-semibold">{{ pageTitle }}</h1>
-  
-          <!-- Create Button -->
-          <Button @click="goToCreate" variant="default">
-            Create Floor
-          </Button>
-  
-          <!-- Table -->
-          <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm mt-4">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Number</TableHead>
-                        <TableHead v-if="isAdmin">Manager Name</TableHead>
-                        <TableHead>Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow v-for="(floor, index) in floors" :key="floor.id">
-                        <TableCell>{{ floor.name }}</TableCell>
-                        <TableCell>{{ floor.number }}</TableCell>
-                        <TableCell v-if="isAdmin">{{ floor.manager_name }}</TableCell>
-                        <TableCell v-if="currentId ==  floor.manager_id || isAdmin" class="space-x-2">
-                            <Button @click="editFloor(floor.id)" size="sm" variant="secondary">Edit</Button>
-                            <div class="relative group inline-block">
+  <Head :title="pageTitle" />
+
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="flex h-full flex-col gap-4 rounded-xl p-4">
+      <div class="p-6 space-y-6">
+        <h1 class="text-2xl font-semibold">{{ pageTitle }}</h1>
+
+        <Button @click="goToCreate" variant="default">
+          Create Floor
+        </Button>
+
+        <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm mt-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Number</TableHead>
+                <TableHead v-if="isAdmin">Manager Name</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="(floor, index) in floors.data" :key="floor.id">
+                <TableCell>{{ floor.name }}</TableCell>
+                <TableCell>{{ floor.number }}</TableCell>
+                <TableCell v-if="isAdmin">{{ floor.manager_name }}</TableCell>
+                <TableCell v-if="currentId == floor.manager_id || isAdmin" class="space-x-2">
+                  <Button @click="editFloor(floor.id)" size="sm" variant="secondary">Edit</Button>
+                  <div class="relative group inline-block">
                     <Button :disabled="floor.room_count != 0" @click="openDeleteModal(floor.id)" size="sm"
                       variant="destructive">
                       Delete
                     </Button>
-
-                    <!-- Tooltip -->
                     <div v-if="floor.room_count != 0"
                       class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-700 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
                       Floor cannot be deleted because it has rooms assigned to it.
                     </div>
                   </div>
-                        </TableCell>
-                        <TableCell v-else class="space-x-2">
-                            <Badge variant="destructive">Not Allowed</Badge>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow v-if="floors.length === 0">
-                        <TableCell :colspan="3" class="text-center py-8">No floors found. </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-            </div>
-              
-            
-  
-          <!-- Delete Modal -->
-          <AlertDialog v-model:open="isModalOpen">
-            <AlertDialogContent>
+                </TableCell>
+                <TableCell v-else class="space-x-2">
+                  <Badge variant="destructive">Not Allowed</Badge>
+                </TableCell>
+              </TableRow>
+              <TableRow v-if="floors.data.length === 0">
+                <TableCell :colspan="4" class="text-center py-8">No floors found.</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+
+        <div class="flex justify-end items-center space-x-2 mt-4">
+          <Button variant="outline" size="sm" :disabled="!floors.prev_page_url"
+            @click="changePage(floors.current_page - 1)">
+            Previous
+          </Button>
+          <span class="text-sm text-muted-foreground">
+            Page {{ floors.current_page }} of {{ floors.last_page }}
+          </span>
+          <Button variant="outline" size="sm" :disabled="!floors.next_page_url"
+            @click="changePage(floors.current_page + 1)">
+            Next
+          </Button>
+        </div>
+
+        <AlertDialog v-model:open="isModalOpen">
+          <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Floor</AlertDialogTitle>
               <AlertDialogDescription>
@@ -158,9 +167,7 @@ function confirmDelete() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-  
-        </div>
       </div>
-    </AppLayout>
-  </template>
-  
+    </div>
+  </AppLayout>
+</template>

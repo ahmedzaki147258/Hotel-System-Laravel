@@ -5,7 +5,6 @@ import { Head } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 
-// Import shadcn-vue components
 import {
   Table,
   TableHeader,
@@ -26,9 +25,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-// Props
+
 const props = defineProps({
-  rooms: Array,
+  rooms: {
+    type: Object,
+    required: true,
+  },
   userRole: String,
   isAdmin: {
     type: Boolean,
@@ -44,11 +46,9 @@ const props = defineProps({
   },
 });
 
-// State
 const isModalOpen = ref(false)
 const roomToDelete = ref(null)
 
-// Computed
 const pageTitle = 'Manage Rooms'
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -58,7 +58,6 @@ const breadcrumbs: BreadcrumbItem[] = [
   }
 ];
 
-// Methods
 function goToCreate() {
   router.visit(route('rooms.create'))
 }
@@ -85,6 +84,14 @@ function confirmDelete() {
   }
   closeModal()
 }
+
+function changePage(page: number) {
+  router.get(route('rooms.index', { page }), {
+    preserveScroll: true,
+    only: ['rooms'],
+  });
+}
+
 </script>
 
 <template>
@@ -96,12 +103,10 @@ function confirmDelete() {
       <div class="p-6 space-y-6">
         <h1 class="text-2xl font-semibold">{{ pageTitle }}</h1>
 
-        <!-- Create Button -->
         <Button @click="goToCreate" variant="default">
           Create Room
         </Button>
 
-        <!-- Table -->
         <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm mt-4">
           <Table>
             <TableHeader>
@@ -116,12 +121,11 @@ function confirmDelete() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="(room, index) in rooms" :key="room.id">
+              <TableRow v-for="(room, index) in rooms.data" :key="room.id">
                 <TableCell>{{ room.number }}</TableCell>
                 <TableCell>{{ room.capacity }}</TableCell>
                 <TableCell>${{ (room.price / 100).toFixed(2) }}</TableCell>
                 <TableCell>{{ room.floor_name }}</TableCell>
-
 
                 <TableCell v-if="isAdmin">{{ room.manager_name }}</TableCell>
                 <TableCell v-if="currentId == room.manager_id || isAdmin" class="space-x-2">
@@ -131,8 +135,6 @@ function confirmDelete() {
                       variant="destructive">
                       Delete
                     </Button>
-
-                    <!-- Tooltip -->
                     <div v-if="room.status == 'unavailable'"
                       class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-700 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
                       Currently Unavailable, can't delete
@@ -143,16 +145,28 @@ function confirmDelete() {
                   <Badge variant="destructive">Not Allowed</Badge>
                 </TableCell>
               </TableRow>
-              <TableRow v-if="rooms.length === 0">
+              <TableRow v-if="rooms.data.length === 0">
                 <TableCell :colspan="3" class="text-center py-8">No rooms found. </TableCell>
               </TableRow>
             </TableBody>
+
           </Table>
         </div>
 
+        <div class="flex justify-end items-center space-x-2 mt-4">
+          <Button variant="outline" size="sm" :disabled="rooms.current_page === 1"
+            @click="changePage(rooms.current_page - 1)">
+            Previous
+          </Button>
+          <span class="text-sm text-muted-foreground">
+            Page {{ rooms.current_page }} of {{ rooms.last_page }}
+          </span>
+          <Button variant="outline" size="sm" :disabled="rooms.current_page === rooms.last_page"
+            @click="changePage(rooms.current_page + 1)">
+            Next
+          </Button>
+        </div>
 
-
-        <!-- Delete Modal -->
         <AlertDialog v-model:open="isModalOpen">
           <AlertDialogContent>
             <AlertDialogHeader>
