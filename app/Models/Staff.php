@@ -32,7 +32,6 @@ class Staff extends Authenticatable implements BannableContract
     ];
 
     protected $casts = [
-        //'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 

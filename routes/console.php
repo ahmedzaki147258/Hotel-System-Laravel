@@ -15,9 +15,8 @@ Artisan::command('clients:inactive', function () {
         $client->save();
     }
 })
-->purpose("send an email notification to clients who didn't login from the past month")
-->dailyAt('00:00');
-// ->everyMinute();
+    ->purpose("send an email notification to clients who didn't login from the past month")
+    ->dailyAt('00:00');
 
 Artisan::command('reservations:check', function () {
     $reservations = Reservation::where('check_out_at', '<', now())->get();
@@ -27,6 +26,5 @@ Artisan::command('reservations:check', function () {
         $room->save();
     }
 })
-->purpose("check if the reservation is completed and update the room status to available")
-->dailyAt('00:02');
-// ->everyMinute();
+    ->purpose("check if the reservation is completed and update the room status to available")
+    ->dailyAt('00:02');

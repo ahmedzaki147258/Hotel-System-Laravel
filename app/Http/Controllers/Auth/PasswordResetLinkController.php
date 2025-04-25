@@ -52,9 +52,7 @@ class PasswordResetLinkController extends Controller
         $client->reset_token = bin2hex(random_bytes(50));
         $client->save();
         Mail::to($request->email)->send(new ResetPassword($client));
-        // Password::sendResetLink(
-        //     $request->only('email')
-        // );
+
 
         return back()->with('status', __('A reset link will be sent if the account exists.'));
     }
