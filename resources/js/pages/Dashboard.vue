@@ -2,7 +2,6 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import axios from 'axios';
 import { ArcElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, LineElement, PointElement, Title, Tooltip } from 'chart.js';
 import { computed, onMounted, ref, watch } from 'vue';
 import { Line, Pie } from 'vue-chartjs';
@@ -171,10 +170,13 @@ const topClient = computed(() => {
 const fetchStatistics = async () => {
     loading.value = true;
     try {
-        const response = await axios.get('http://127.0.0.1:8000/dashboard-statistics', {
-            params: { year: selectedYear.value },
-        });
-        statisticsData.value = response.data;
+        const response = await fetch(`/dashboard-statistics?year=${selectedYear.value}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        statisticsData.value = data;
     } catch (error) {
         console.error('Error fetching statistics:', error);
     } finally {
@@ -206,7 +208,6 @@ onMounted(() => {
                         id="year-select"
                         v-model="selectedYear"
                         class="form-select"
-                        style="padding: 8px; border-radius: 4px; border: 1px solid #ccc"
                     >
                         <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
                     </select>
@@ -216,17 +217,8 @@ onMounted(() => {
                 <a
                     :href="route('clients.export')"
                     class="export-btn"
-                    style="
-                        display: flex;
-                        align-items: center;
-                        background-color: #4caf50;
-                        color: white;
-                        padding: 8px 16px;
-                        text-decoration: none;
-                        border-radius: 4px;
-                    "
                 >
-                    <i class="download-icon" style="margin-right: 8px"></i> Export Client Data
+                    <i class="download-icon"></i> Export Client Data
                 </a>
             </div>
 
@@ -321,7 +313,7 @@ onMounted(() => {
 <style scoped>
 .statistics-page {
     padding: 1.5rem;
-    background: white;
+    background: var(--background);
     border-radius: 0.5rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
@@ -335,16 +327,27 @@ onMounted(() => {
 
 .year-filter label {
     font-weight: 500;
-    color: #444;
+    color: var(--foreground);
 }
 
 .form-select {
     padding: 0.5rem 1rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border);
     border-radius: 0.375rem;
-    background-color: white;
+    background-color: var(--background);
+    color: var(--foreground);
     min-width: 120px;
     font-size: 0.875rem;
+}
+
+.export-btn {
+    display: flex;
+    align-items: center;
+    background-color: #4caf50;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 4px;
 }
 
 .loading-state {
@@ -353,10 +356,11 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     height: 300px;
+    color: var(--foreground);
 }
 
 .loader {
-    border: 4px solid #f3f3f3;
+    border: 4px solid var(--border);
     border-radius: 50%;
     border-top: 4px solid #e0b472;
     width: 40px;
@@ -377,7 +381,7 @@ onMounted(() => {
 .page-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #0b1626;
+    color: var(--foreground);
     margin-bottom: 2rem;
 }
 
@@ -388,7 +392,7 @@ onMounted(() => {
 }
 
 .chart-card {
-    background: #f9fafb;
+    background: var(--card);
     border-radius: 0.5rem;
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -397,7 +401,7 @@ onMounted(() => {
 .chart-title {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #0b1626;
+    color: var(--foreground);
     margin-bottom: 1rem;
     text-align: center;
 }
@@ -410,7 +414,7 @@ onMounted(() => {
 .chart-summary {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid #eaeaea;
+    border-top: 1px solid var(--border);
 }
 
 .summary-item {
@@ -421,12 +425,12 @@ onMounted(() => {
 
 .summary-label {
     font-weight: 500;
-    color: #6b7280;
+    color: var(--muted-foreground);
 }
 
 .summary-value {
     font-weight: 600;
-    color: #0b1626;
+    color: var(--foreground);
 }
 
 @media (max-width: 1024px) {
