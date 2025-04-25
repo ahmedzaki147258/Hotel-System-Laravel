@@ -75,9 +75,30 @@ function closeModal() {
 
 function confirmDelete() {
   if (floorToDelete.value) {
-    router.delete(route('floors.destroy', floorToDelete.value));
+    console.log(`Deleting floor with ID: ${floorToDelete.value}`);
+    
+    router.delete(route('floors.destroy', floorToDelete.value))
+      .then(() => {
+        console.log(`Floor with ID ${floorToDelete.value} has been deleted`);
+
+        closeModal();
+
+        fetchUpdatedData();
+      })
+      .catch((error) => {
+        console.error('Error deleting floor:', error);
+        alert('Error deleting floor. Please try again.');
+      });
+  } else {
+    closeModal();
   }
-  closeModal();
+}
+
+function fetchUpdatedData() {
+  router.get(route('floors.index'), {
+    preserveScroll: true,
+    only: ['floors'],  
+  });
 }
 
 function changePage(page: number) {

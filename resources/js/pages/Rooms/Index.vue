@@ -80,10 +80,31 @@ function closeModal() {
 function confirmDelete() {
   if (roomToDelete.value) {
     console.log(`Deleting room with ID: ${roomToDelete.value}`);
+    
     router.delete(route('rooms.destroy', roomToDelete.value))
+      .then(() => {
+        console.log(`Room with ID ${roomToDelete.value} has been deleted`);
+
+        closeModal();
+
+        fetchUpdatedData();
+      })
+      .catch((error) => {
+        console.error('Error deleting room:', error);
+        alert('Error deleting room. Please try again.');
+      });
+  } else {
+    closeModal();
   }
-  closeModal()
 }
+
+function fetchUpdatedData() {
+  router.get(route('rooms.index'), {
+    preserveScroll: true,
+    only: ['rooms'],  
+  });
+}
+
 
 function changePage(page: number) {
   router.get(route('rooms.index', { page }), {

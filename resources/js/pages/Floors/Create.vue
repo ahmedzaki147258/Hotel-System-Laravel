@@ -57,6 +57,7 @@ function createFloor() {
             type="text"
             v-model="form.name"
             required
+            min="3"
             class="w-full px-4 py-2 border text-black rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
