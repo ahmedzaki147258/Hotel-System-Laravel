@@ -20,7 +20,11 @@
                   placeholder="Enter manager name"
                   :disabled="form.processing"
                   required
+                  :class="{ 'border-red-500': form.errors.name }"
                 />
+                <p v-if="form.errors.name" class="text-sm text-red-500 mt-1">
+                  {{ form.errors.name }}
+                </p>
               </div>
 
               <div class="space-y-2">
@@ -32,7 +36,11 @@
                   placeholder="Enter manager email"
                   :disabled="form.processing"
                   required
+                  :class="{ 'border-red-500': form.errors.email }"
                 />
+                <p v-if="form.errors.email" class="text-sm text-red-500 mt-1">
+                  {{ form.errors.email }}
+                </p>
               </div>
 
               <div class="space-y-2">
@@ -44,7 +52,11 @@
                   placeholder="Enter manager national ID"
                   :disabled="form.processing"
                   required
+                  :class="{ 'border-red-500': form.errors.national_id }"
                 />
+                <p v-if="form.errors.national_id" class="text-sm text-red-500 mt-1">
+                  {{ form.errors.national_id }}
+                </p>
               </div>
 
               <div class="space-y-2">
@@ -56,7 +68,11 @@
                   placeholder="Enter manager password"
                   :disabled="form.processing"
                   required
+                  :class="{ 'border-red-500': form.errors.password }"
                 />
+                <p v-if="form.errors.password" class="text-sm text-red-500 mt-1">
+                  {{ form.errors.password }}
+                </p>
               </div>
 
               <div class="space-y-2">
@@ -67,9 +83,13 @@
                   accept="image/*"
                   @change="handleImageUpload"
                   :disabled="form.processing"
+                  :class="{ 'border-red-500': form.errors.avatar_image }"
                 />
                 <p class="text-sm text-muted-foreground">
                   Accepted formats: JPG, PNG, JPEG. Max size: 2MB
+                </p>
+                <p v-if="form.errors.avatar_image" class="text-sm text-red-500 mt-1">
+                  {{ form.errors.avatar_image }}
                 </p>
               </div>
             </div>
@@ -127,13 +147,34 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const submit = () => {
-  form.post(route('managers.store'));
+  form.post(route('managers.store'), {
+    onError: (errors) => {
+      console.log('Validation errors:', errors);
+    },
+    preserveScroll: true
+  });
 };
 
 const handleImageUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      form.errors.avatar_image = 'Image size must be less than 2MB';
+      event.target.value = ''; // Clear the file input
+      return;
+    }
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      form.errors.avatar_image = 'Only JPG, PNG, and JPEG formats are allowed';
+      event.target.value = ''; // Clear the file input
+      return;
+    }
+    
     form.avatar_image = file;
+    form.errors.avatar_image = null; // Clear any previous errors
   }
 };
-</script> 
+</script>
